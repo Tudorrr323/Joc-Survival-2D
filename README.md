@@ -9,7 +9,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 ## 📸 Galerie Imagini
 
 ### Gameplay & Interfață
-
+| | |
 |:---:|:---:|
 | ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Explorare Lume* | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* |
 | ![Combat](Poze%20Joc/Screenshot%202026-01-19%20203753.png) <br> *Luptă cu Inamici și Level Up* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* |
@@ -18,13 +18,13 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 | ![Menu In-Game](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Meniu Principal in Timpul Jocului* | |
 
 ### Map Editor - Funcționalități
-
+| | |
 |:---:|:---:|
 | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20192012.png) <br> *Listă Hărți* | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20204400.png) <br> *Listă Hărți* |
 | ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20203142.png) <br> *Interfață Editor* | |
 
 ### Sistem Confirmări
-
+| | |
 |:---:|:---:|
 | ![Delete Confirm](Poze%20Joc/Screenshot%202026-01-19%20191446.png) <br> *Pop-up Ștergere* | ![Save Confirm](Poze%20Joc/Screenshot%202026-01-19%20191512.png) <br> *Confirmare Salvare* |
 
