@@ -12,10 +12,10 @@ Iată câteva capturi de ecran din joc și editor:
 
 | Gameplay | Editor & Meniuri |
 |:---:|:---:|
-| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Explorare* | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Meniu Principal* |
-| ![Combat](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Sistem de Luptă* | ![Editor](Poze%20Joc/Screenshot%202026-01-19%20191216.png) <br> *Editor de Hărți* |
-| ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Inventar* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Crafting Station* |
-| ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191351.png) <br> *Vendor Shop* | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20191401.png) <br> *Listă Hărți* |
+| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Explorare* | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* |
+| ![Combat](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Sistem de Luptă* | ![Editor](Poze%20Joc/Screenshot%2026-01-19%203142.png) <br> *Editor de Hărți* |
+| ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Crafting Station* |
+| ![Shop](Poze%20Joc/Screenshot%2026-01-19%191744.png) <br> *Vendor Shop* | ![Map List](Poze%20Joc/Screenshot%2026-01-19%192012.png) <br> *Listă Hărți* |
 
 *(Mai multe imagini disponibile în folderul `Poze Joc/`)*
 
