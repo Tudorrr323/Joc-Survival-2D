@@ -11,11 +11,13 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 ### Gameplay & Interfață
 | | |
 |:---:|:---:|
-| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Explorare Lume* | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* |
-| ![Combat](Poze%20Joc/Screenshot%202026-01-19%20203753.png) <br> *Luptă cu Inamici și Level Up* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* |
-| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Crafting Station* | ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191744.png) <br> *Vendor Shop* | 
-| ![World Map](Poze%20Joc/Screenshot%202026-01-19%20192656.png) <br> *World Map* | ![World Map](Poze%20Joc/Screenshot%202026-01-19%20191216.png) <br> *World Map* |
-| ![Menu In-Game](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Meniu Principal in Timpul Jocului* | |
+| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Explorare Lume* | ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191729.png) <br> *Explorare Lume* | 
+| ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* | ![Combat](Poze%20Joc/Screenshot%202026-01-19%20203753.png) <br> *Luptă cu Inamici și Level Up* | 
+| ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191512.png) <br> *Inventar* | 
+| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Crafting Station* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191351.png) <br> *Folosire Monument* | 
+| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191401.png) <br> *Cooldown Momument* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191446.png) <br> *Hunter Camp* | 
+| ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191744.png) <br> *Vendor Shop* | ![World Map](Poze%20Joc/Screenshot%202026-01-19%20192656.png) <br> *World Map* | 
+| ![World Map](Poze%20Joc/Screenshot%202026-01-19%20191216.png) <br> *World Map* | ![Menu In-Game](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Meniu Principal in Timpul Jocului* | |
 
 ### Map Editor - Funcționalități
 | | |
@@ -23,10 +25,10 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20192012.png) <br> *Listă Hărți* | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20204400.png) <br> *Listă Hărți* |
 | ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20203142.png) <br> *Interfață Editor* | |
 
-### Sistem Confirmări
+### Altele
 | | |
 |:---:|:---:|
-| ![Delete Confirm](Poze%20Joc/Screenshot%202026-01-19%20191446.png) <br> *Pop-up Ștergere* | ![Save Confirm](Poze%20Joc/Screenshot%202026-01-19%20191512.png) <br> *Confirmare Salvare* |
+| ![Delete Confirm](Poze%20Joc/Screenshot%202026-01-19%20205422.png) <br> *Pop-up Ștergere* | ![RIP Scene](Poze%20Joc/Screenshot%202026-01-19%20191958.png) <br> *Death Moment* |
 
 ---
 
