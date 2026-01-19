@@ -15,7 +15,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* | ![Combat](Poze%20Joc/Screenshot%202026-01-19%20203753.png) <br> *Luptă cu Inamici și Level Up* | 
 | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191512.png) <br> *Inventar* | 
 | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Crafting Station* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191351.png) <br> *Folosire Monument* | 
-| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191401.png) <br> *Cooldown Momument* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191446.png) <br> *Hunter Camp* | 
+| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191401.png) <br> *Cooldown Monument* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191446.png) <br> *Hunter Camp* | 
 | ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191744.png) <br> *Vendor Shop* | ![World Map](Poze%20Joc/Screenshot%202026-01-19%20192656.png) <br> *World Map* | 
 | ![World Map](Poze%20Joc/Screenshot%202026-01-19%20191216.png) <br> *World Map* | ![Menu In-Game](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Meniu Principal in Timpul Jocului* | |
 
@@ -23,7 +23,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 | | |
 |:---:|:---:|
 | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20192012.png) <br> *Listă Hărți* | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20204400.png) <br> *Listă Hărți* |
-| ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20203142.png) <br> *Interfață Editor* | |
+| ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20203142.png) <br> *Interfață Editor* | ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20205739.png) <br> *Interfață Editor* | |
 
 ### Altele
 | | |
@@ -32,7 +32,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 
 ---
 
-## 🎮 Controale
+## Controale
 
 ### În Joc (Gameplay)
 *   **W / A / S / D** sau **Săgeți**: Mișcare caracter.
@@ -52,7 +52,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 
 ---
 
-## 🛠️ Mecanici de Joc
+## Mecanici de Joc
 
 ### 1. Resurse și Crafting
 Jucătorul poate aduna resurse din lume folosind unelte specifice:
@@ -69,7 +69,7 @@ Aceste resurse sunt folosite în meniul de **Crafting [C]** pentru a crea:
 Lumea este populată de diverse creaturi ostile:
 *   **Zombie:** Inamic de bază, urmărește jucătorul.
 *   **Schelete:** Mai rapid și mai periculos.
-*   **Hunter:** Inamic avansat, poate lăsa pradă legendară (armuri).
+*   **Hunter:** Inamic avansat, care are o șansă de a lăsa pradă (drop) **piese de armură aleatorii** (Helmet, Chestplate, Pants, Boots) la înfrângere.
 
 Sistemul de luptă se bazează pe atac și apărare (Defense). Armurile reduc daunele primite.
 
@@ -77,7 +77,7 @@ Sistemul de luptă se bazează pe atac și apărare (Defense). Armurile reduc da
 Pe hartă sau în sate (plasate în editor) poți găsi un **Vendor (Negustor)**.
 *   Interacționează cu el atingându-l.
 *   Poți **vinde** resurse și echipament vechi pentru Aur (Gold).
-*   Poți **cumpăra** arme mai bune (ex: Iron Sword, Golden Axe), armuri și poțiuni de viață.
+*   Poți **cumpăra** arme și unelte speciale, inclusiv iteme **Golden (Aurii)**, care sunt mult mai puternice și eficiente decât variantele standard de fier sau piatră.
 
 ### 4. Progresie RPG
 *   **XP & Level:** Fiecare inamic învins și resursă colectată oferă XP. Creșterea în nivel mărește viața maximă și daunele.
@@ -95,7 +95,21 @@ Jocul include un editor puternic care permite:
 
 ---
 
-## 🚀 Cum să rulezi jocul
+## Tehnologii Utilizate
+
+Acest proiect a fost dezvoltat de la zero folosind limbajul **Java**, fără a utiliza motoare de joc externe (cum ar fi Unity sau Godot).
+
+*   **Limbaj:** Java (JDK 8+)
+*   **Grafică & UI:** Java AWT (Abstract Window Toolkit) și Java Swing pentru randare grafică 2D, gestionare ferestre și input.
+*   **Concepte:**
+    *   **Programare Orientată pe Obiecte (OOP):** Structură modulară cu clase pentru Entități, Hartă, Jucător, Inamici.
+    *   **Generare Procedurală:** Hărțile de joc sunt generate aleatoriu la fiecare "New Game".
+    *   **Serializare:** Salvarea și încărcarea hărților personalizate folosind `Serializable`.
+    *   **Game Loop:** Implementarea unui ciclu de joc clasic (Update -> Render) folosind `javax.swing.Timer`.
+
+---
+
+## Cum să rulezi jocul
 
 Asigură-te că ai **Java 8** sau mai nou instalat.
 
