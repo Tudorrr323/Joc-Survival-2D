@@ -11,10 +11,9 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 ### Gameplay & Interfață
 | | |
 |:---:|:---:|
-| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Explorare Lume* | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Meniu Principal* |
-| ![Combat](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Luptă cu Inamici* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Inventar* |
-| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Crafting Station* | ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191351.png) <br> *Vendor Shop* |
-| ![Grain Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191958.png) <br> *Resurse (Cereale)* | |
+| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Explorare Lume* | ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* |
+| ![Combat](Poze%20Joc/Screenshot%202026-01-19%20203753.png) <br> *Luptă cu Inamici și Level Up* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* |
+| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Crafting Station* | ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191744.png) <br> *Vendor Shop* | |
 
 ### Map Editor - Funcționalități
 | | |
