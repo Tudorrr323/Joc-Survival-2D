@@ -1,4 +1,4 @@
-# 🌲 Ultimate Survival 2D
+# Joc Survival 2D
 
 Un joc RPG de supraviețuire 2D, dezvoltat în Java, unde jucătorul trebuie să exploreze o lume generată procedural, să adune resurse, să construiască, să lupte cu inamici și să facă comerț pentru a supraviețui și a avansa în nivel.
 
@@ -6,7 +6,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 
 ---
 
-## 📸 Galerie Imagini
+## Galerie Imagini
 
 ### Gameplay & Interfață
 | | |
