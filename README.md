@@ -85,7 +85,7 @@ Pe hartă sau în sate (plasate în editor) poți găsi un **Vendor (Negustor)**
 
 ---
 
-## 🗺️ Map Editor
+## Map Editor
 
 Jocul include un editor puternic care permite:
 *   **Creare Hărți:** Hărți personalizate de dimensiunea 100x100.
