@@ -6,29 +6,28 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 
 ---
 
-## Galerie Imagini
+## Actualizări Recente
 
-### Gameplay & Interfață
-| | |
-|:---:|:---:|
-| ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191139.png) <br> *Explorare Lume* | ![Gameplay](Poze%20Joc/Screenshot%202026-01-19%20191729.png) <br> *Explorare Lume* | 
-| ![Menu](Poze%20Joc/Screenshot%202026-01-19%20191035.png) <br> *Meniu Principal* | ![Combat](Poze%20Joc/Screenshot%202026-01-19%20203753.png) <br> *Luptă cu Inamici și Level Up* | 
-| ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191325.png) <br> *Inventar* | ![Inventory](Poze%20Joc/Screenshot%202026-01-19%20191512.png) <br> *Inventar* | 
-| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191228.png) <br> *Crafting Station* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191351.png) <br> *Folosire Monument* | 
-| ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191401.png) <br> *Cooldown Monument* | ![Crafting](Poze%20Joc/Screenshot%202026-01-19%20191446.png) <br> *Hunter Camp* | 
-| ![Shop](Poze%20Joc/Screenshot%202026-01-19%20191744.png) <br> *Vendor Shop* | ![World Map](Poze%20Joc/Screenshot%202026-01-19%20192656.png) <br> *World Map* | 
-| ![World Map](Poze%20Joc/Screenshot%202026-01-19%20191216.png) <br> *World Map* | ![Menu In-Game](Poze%20Joc/Screenshot%202026-01-19%20191155.png) <br> *Meniu Principal in Timpul Jocului* | |
+### Refactoring Major & Organizare
+*   Structura proiectului a fost complet reorganizată pentru o mai bună modularitate.
+*   Codul sursă este acum împărțit logic în pachete: `engine`, `entities`, `items`, `ui`, `utils`, `world`.
 
-### Map Editor - Funcționalități
-| | |
-|:---:|:---:|
-| ![Map List](Poze%20Joc/Screenshot%202026-01-19%20192012.png) <br> *Listă Hărți* | ![Map List](Poze%20Joc/Screenshot%202026-01-19%20204400.png) <br> *Listă Hărți* |
-| ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20203142.png) <br> *Interfață Editor* | ![Editor Overview](Poze%20Joc/Screenshot%202026-01-19%20205739.png) <br> *Interfață Editor* | |
+### Sistem Avansat de Save/Load
+*   **Sloturi Multiple:** Jucătorul are la dispoziție 3 sloturi de salvare distincte.
+*   **Metadata:** Salvările includ acum:
+    *   **Nume Personalizat:** Poți da un nume unic fiecărei salvări.
+    *   **Screenshot Automat:** O imagine a stării jocului este capturată automat la momentul salvării și afișată în meniul de încărcare.
+    *   **Timestamp:** Data și ora salvării sunt afișate.
+*   **Management:**
+    *   Posibilitatea de a șterge salvările existente, cu un dialog de confirmare ("Are you sure?").
+    *   Protecție la încărcare: Nu se poate încărca un slot gol; un mesaj de avertizare este afișat.
+    *   Confirmare la încărcare pentru a preveni pierderea progresului curent.
+*   **Folder Dedicat:** Toate fișierele de salvare (`.dat`, `.info`, `.png`) sunt acum stocate organizat în folderul `saves/`.
 
-### Altele
-| | |
-|:---:|:---:|
-| ![Delete Confirm](Poze%20Joc/Screenshot%202026-01-19%20205422.png) <br> *Pop-up Ștergere* | ![RIP Scene](Poze%20Joc/Screenshot%202026-01-19%20191958.png) <br> *Death Moment* |
+### Îmbunătățiri UI & Bug Fixes
+*   **Interfață:** Butoanele și meniurile au fost rafinate. Butonul "Continue" este dezactivat vizual dacă nu există salvări.
+*   **Text:** Numele salvărilor care sunt prea lungi sunt trunchiate automat ("...") pentru a nu depăși chenarul UI.
+*   **Stabilitate:** S-au rezolvat erori critice legate de încărcarea fișierelor și manipularea stărilor meniului.
 
 ---
 
@@ -128,4 +127,4 @@ Asigură-te că ai **Java 8** sau mai nou instalat.
 ---
 
 **Dezvoltat în Java AWT/Swing.**
-*Versiune: 15.0 Complete*
+*Versiune: 0.1 (Refactor & Save System Update)*
