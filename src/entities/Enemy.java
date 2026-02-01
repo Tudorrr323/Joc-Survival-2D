@@ -12,7 +12,7 @@ import utils.Enums;
 import world.WorldMap;
 
 public class Enemy extends GameCharacter {
-    public enum Type { ZOMBIE, SKELETON, RAT, HUNTER }
+    public enum Type { ZOMBIE, SKELETON, RAT, HUNTER, WITCH }
     
     public Type type;
     public int x, y;
@@ -39,6 +39,8 @@ public class Enemy extends GameCharacter {
                 this.maxHealth = 20; this.attack = 5; this.moveSpeedThreshold = 25; break;
             case HUNTER:
                 this.maxHealth = 60; this.attack = 20; this.moveSpeedThreshold = 45; break;
+            case WITCH:
+                this.maxHealth = 40; this.attack = 25; this.moveSpeedThreshold = 60; break;
         }
         this.health = this.maxHealth;
     }
@@ -59,7 +61,7 @@ public class Enemy extends GameCharacter {
         // 2. Atac
         if (distSq <= 1) { 
             if (attackCooldown <= 0) {
-                p.takeDamage(this.attack);
+                // p.takeDamage(this.attack); // Removed: GamePanel handles damage/block logic now
                 attackCooldown = 60; 
                 return true; 
             }
@@ -118,4 +120,40 @@ public class Enemy extends GameCharacter {
     
     // Metoda ajutatoare pentru a recupera tile-ul de sub inamic cand moare (pt GamePanel)
     public Object getSavedTile() { return savedTile; }
+    
+    // --- VISUALS & LOGIC FOR LOADING SCREEN ---
+    public float visualX, visualY;
+    public int walkAnim = 0;
+    
+    public void updateVisuals(int tileSize) {
+        // Simple interpolation for smooth movement
+        // For actual grid movement, this follows x/y. 
+        // For loading screen, visualX/Y are manipulated directly, so this method might fight it?
+        // Ah, in Loading Screen we manipulate visualX directly and DON'T change x/y grid pos.
+        // So this method might overwrite visualX with 0 if x is 0.
+        // We should only interpolate if we are actually using grid movement.
+        // But for consistency with Player, we can keep it.
+        // However, in loading screen, we are NOT setting 'x' and 'y'. We are setting 'visualX'.
+        // So calling updateVisuals() will try to move visualX towards x*60 (which is 0).
+        // FIX: Only update if x/y are relevant? Or just don't call updateVisuals in Loading Screen for Enemy?
+        // Player's updateVisuals is called in Loading Screen. Player x is 0. 
+        // So Player's visualX should move towards 0?
+        // In GamePanel update:
+        // loadingPlayer.updateVisuals(TILE_SIZE);
+        // loadingPlayer.visualX += 3;
+        // The += 3 fights the interpolation!
+        // If x=0, visualX wants to go to 0. 
+        // If we want free movement, we shouldn't call updateVisuals OR we should update x/y to match visualX/tileSize.
+        // For Loading Screen, simpler to NOT call updateVisuals() if we move manually.
+        // I will remove the call to updateVisuals from GamePanel for loading entities later.
+        // But I still need the fields.
+        
+        visualX += (x * tileSize - visualX) * 0.2f; 
+        visualY += (y * tileSize - visualY) * 0.2f; 
+    }
+    
+    public void healFull() {
+        health = maxHealth;
+        status = Enums.Status.ALIVE;
+    }
 }

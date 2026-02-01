@@ -17,7 +17,8 @@ public class Main {
         GamePanel panel = new GamePanel();
         
         frame.add(panel);
-        frame.setSize(1024, 768); 
+        frame.setUndecorated(true);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);

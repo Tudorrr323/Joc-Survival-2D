@@ -15,6 +15,7 @@ import items.Item;
 import utils.Enums;
 
 public abstract class GameCharacter implements Serializable {
+    private static final long serialVersionUID = 1L;
     protected String name;
     protected int attack;
     protected int defense;

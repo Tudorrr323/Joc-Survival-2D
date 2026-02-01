@@ -12,6 +12,7 @@ import items.Item;
 import utils.Enums;
 
 public class Player extends GameCharacter {
+    private static final long serialVersionUID = 1L;
     public int x, y;
     public float visualX, visualY;
     
@@ -20,10 +21,25 @@ public class Player extends GameCharacter {
     private int nextLevelXp = 100;
     public int damageBonus = 0;
     
+    // --- ANIMATION STATE ---
+    public enum AnimState { IDLE, RUN, ATTACK_1, ATTACK_2, BLOCK }
+    public AnimState animState = AnimState.IDLE;
+    public int animFrame = 0;
+    public int animTick = 0;
+    public boolean facingLeft = false;
+    
+    public boolean actionLocked = false;
+    public boolean hitTriggered = false;
+    
+    // --- COMBAT DIRECTION ---
+    public int attackDirX = 1; // Default right
+    public int attackDirY = 0;
+    
     // --- GOLD ---
     private int gold = 0;
     
     public int levelUpAnim = 0; 
+    public int walkAnim = 0;
     public Item[] inventory = new Item[5]; 
     public Item[] backpack = new Item[16];
     public Item[] armor = new Item[4];
@@ -44,6 +60,10 @@ public class Player extends GameCharacter {
     public void addGold(int amount) { this.gold += amount; }
     public void removeGold(int amount) { this.gold -= amount; }
 
+    public boolean isBlocking() {
+        return animState == AnimState.BLOCK;
+    }
+
     public int getTotalDamage() {
         int dmg = 5; 
         Item item = getSelectedItem();
@@ -62,6 +82,13 @@ public class Player extends GameCharacter {
         int finalDmg = dmg - getDefense();
         if (finalDmg < 1) finalDmg = 1; 
         health -= finalDmg; if (health < 0) health = 0; if (health == 0) die();
+    }
+    
+    public int applyDamage(int dmg) {
+        int finalDmg = dmg - getDefense();
+        if (finalDmg < 1) finalDmg = 1; 
+        health -= finalDmg; if (health < 0) health = 0; if (health == 0) die();
+        return finalDmg;
     }
     
     // --- COLECTARE IMBUNATATITA (RARITY CHECK) ---
@@ -109,8 +136,82 @@ public class Player extends GameCharacter {
     }
     public Item getSelectedItem() { return inventory[selectedSlot]; }
     public void addXp(int amount) { this.xp += amount; if (this.xp >= nextLevelXp) { level++; xp -= nextLevelXp; nextLevelXp = (int)(nextLevelXp * 1.5); maxHealth += 20; health = maxHealth; damageBonus += 5; levelUpAnim = 60; } }
-    public void updateVisuals(int tileSize) { visualX += (x * tileSize - visualX) * 0.2f; visualY += (y * tileSize - visualY) * 0.2f; if (levelUpAnim > 0) levelUpAnim--; }
-    @Override public void damage(GameCharacter target) { target.takeDamage(getTotalDamage()); }
+    public int getFrameCount() {
+        switch(animState) {
+            case IDLE: return 8;
+            case RUN: return 6;
+            case ATTACK_1: return 6;
+            case ATTACK_2: return 6;
+            case BLOCK: return 3;
+            default: return 6;
+        }
+    }
+
+    public void updateVisuals(int tileSize, boolean spaceHeld) { 
+        float targetX = x * tileSize;
+        float targetY = y * tileSize;
+        
+        // Determine state
+        boolean moving = Math.abs(targetX - visualX) > 1 || Math.abs(targetY - visualY) > 1;
+        
+        if (!actionLocked) {
+            if (spaceHeld) {
+                animState = AnimState.BLOCK;
+                actionLocked = true;
+                animFrame = 0;
+                animTick = 0;
+            } else if (moving) {
+                animState = AnimState.RUN;
+                if (targetX < visualX) facingLeft = true;
+                else if (targetX > visualX) facingLeft = false;
+            } else {
+                animState = AnimState.IDLE;
+            }
+        }
+        
+        // Animation loop
+        animTick++;
+        int speed = 5; 
+        if (animState == AnimState.RUN) speed = 3;
+        if (actionLocked) speed = 4; 
+        
+        int maxFrames = getFrameCount();
+        
+        if (animTick >= speed) {
+            animTick = 0;
+            
+            // Special logic for BLOCK holding
+            if (animState == AnimState.BLOCK && animFrame == 1 && spaceHeld) {
+                // Stay on frame 1 (the shield-up pose) as long as space is held
+            } else {
+                animFrame++;
+            }
+
+            if (animFrame >= maxFrames) { 
+                animFrame = 0;
+                // If action finished (and space isn't held for block), unlock
+                if (actionLocked) {
+                    if (animState == AnimState.BLOCK && spaceHeld) {
+                        // Keep locking if still blocking
+                    } else {
+                        actionLocked = false;
+                        hitTriggered = false;
+                        animState = AnimState.IDLE;
+                    }
+                }
+            }
+        }
+
+        visualX += (targetX - visualX) * 0.2f; 
+        visualY += (targetY - visualY) * 0.2f; 
+        if (levelUpAnim > 0) levelUpAnim--; 
+    }
+    @Override public void damage(GameCharacter target) { 
+        target.takeDamage(getTotalDamage()); 
+        animState = (Math.random() < 0.5) ? AnimState.ATTACK_1 : AnimState.ATTACK_2;
+        animFrame = 0;
+        animTick = 0;
+    }
     public int countItem(Item.Specific type) { int count = 0; for(Item i : inventory) if(i != null && i.specificType == type) count += i.quantity; for(Item i : backpack) if(i != null && i.specificType == type) count += i.quantity; return count; }
     public boolean hasItem(Item.Specific type, int amount) { return countItem(type) >= amount; }
     public boolean consumeItems(Item.Specific type, int amount) { if(countItem(type) < amount) return false; int remaining = amount; for(int i=0; i<inventory.length; i++) { if(inventory[i] != null && inventory[i].specificType == type) { if(inventory[i].quantity > remaining) { inventory[i].quantity -= remaining; return true; } else { remaining -= inventory[i].quantity; inventory[i] = null; } } } if(remaining > 0) { for(int i=0; i<backpack.length; i++) { if(backpack[i] != null && backpack[i].specificType == type) { if(backpack[i].quantity > remaining) { backpack[i].quantity -= remaining; return true; } else { remaining -= backpack[i].quantity; backpack[i] = null; } } } } return true; }

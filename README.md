@@ -8,26 +8,21 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 
 ## Actualizări Recente
 
-### Refactoring Major & Organizare
-*   Structura proiectului a fost complet reorganizată pentru o mai bună modularitate.
-*   Codul sursă este acum împărțit logic în pachete: `engine`, `entities`, `items`, `ui`, `utils`, `world`.
+### Grafică & Sistem de Personalizare
+*   **Overhaul Vizual:** S-a început integrarea de grafică profesională, adăugând iconițe noi pentru butoane, ferestre modale stilizate și elemente de UI rafinate.
+*   **Selecție Eroi:** Un nou meniu de selecție a caracterului permite alegerea între 4 clase (Knight, Lancer, Archer, Pawn).
+*   **Sistem de Culori:** Posibilitatea de a schimba culoarea echipei/eroului folosind un selector tematic sub formă de săbii, care actualizează instantaneu portretele eroilor.
+*   **Meniu Principal Animat:** Fundal cinematic care simulează o lume vie în spatele butoanelor din meniul principal.
 
-### Sistem Avansat de Save/Load
-*   **Sloturi Multiple:** Jucătorul are la dispoziție 3 sloturi de salvare distincte.
-*   **Metadata:** Salvările includ acum:
-    *   **Nume Personalizat:** Poți da un nume unic fiecărei salvări.
-    *   **Screenshot Automat:** O imagine a stării jocului este capturată automat la momentul salvării și afișată în meniul de încărcare.
-    *   **Timestamp:** Data și ora salvării sunt afișate.
-*   **Management:**
-    *   Posibilitatea de a șterge salvările existente, cu un dialog de confirmare ("Are you sure?").
-    *   Protecție la încărcare: Nu se poate încărca un slot gol; un mesaj de avertizare este afișat.
-    *   Confirmare la încărcare pentru a preveni pierderea progresului curent.
-*   **Folder Dedicat:** Toate fișierele de salvare (`.dat`, `.info`, `.png`) sunt acum stocate organizat în folderul `saves/`.
+### Combat & Mecanici Noi
+*   **Sistem de Guard:** Jucătorul poate acum bloca atacurile inamicilor folosind tasta **SPACE**. Blocarea corectă reduce sau anulează daunele primite.
+*   **Combat Manual:** Mecanica de luptă a fost schimbată; daunele nu mai sunt automate la coliziune. Jucătorul trebuie să dea click pe inamic pentru a-l lovi.
+*   **Heavy Attack:** S-a adăugat un atac puternic pe **CLICK DREAPTA** care oferă și o mică propulsie (dash) în direcția atacului.
+*   **Interacțiune pe Tasta E:** Utilizarea obiectelor din mână (mâncare, poțiuni) și plasarea clădirilor a fost mutată pe tasta **E**.
 
-### Îmbunătățiri UI & Bug Fixes
-*   **Interfață:** Butoanele și meniurile au fost rafinate. Butonul "Continue" este dezactivat vizual dacă nu există salvări.
-*   **Text:** Numele salvărilor care sunt prea lungi sunt trunchiate automat ("...") pentru a nu depăși chenarul UI.
-*   **Stabilitate:** S-au rezolvat erori critice legate de încărcarea fișierelor și manipularea stărilor meniului.
+### Refactoring Major & Save System
+*   **Sistem de Save/Load:** 3 sloturi de salvare cu nume personalizate, timestamp și screenshot-uri automate pentru fiecare sesiune.
+*   **Modularitate:** Codul este împărțit în pachete specifice (`engine`, `entities`, `ui` etc.) pentru a facilita extinderea ulterioară.
 
 ---
 
@@ -35,8 +30,10 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 
 ### În Joc (Gameplay)
 *   **W / A / S / D** sau **Săgeți**: Mișcare caracter.
-*   **SPACE**: Folosește item-ul din mână (Mănâncă pâine, Bea poțiune) sau Interacționează (Ridicp clădiri).
-*   **CLICK STÂNGA**: Atacă inamici / Colectează resurse / Interacționează cu butoane.
+*   **SPACE**: Guard (Blochează atacurile inamicilor).
+*   **E**: Folosește item-ul selectat (Mănâncă / Bea / Construiește) sau Interacționează.
+*   **CLICK STÂNGA**: Atac Ușor (Lovituri rapide).
+*   **CLICK DREAPTA**: Atac Puternic / Dash (Daune mari).
 *   **1 - 5**: Selectare rapidă iteme din Hotbar.
 *   **I**: Deschide/Închide Inventarul.
 *   **C**: Deschide/Închide meniul de Crafting.
@@ -44,87 +41,32 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 *   **ESC**: Pauză / Meniu principal.
 
 ### În Map Editor
-*   **W / A / S / D** sau **Săgeți**: Mișcare cameră pe hartă.
-*   **CLICK STÂNGA**: Plasează obiectul selectat din paletă.
-*   **CLICK PE BUTOANE SĂGEȚI**: Mișcare cameră (alternativă).
-*   **SCROLL MOUSE**: Derulare listă de hărți (în meniul de selecție).
+*   **W / A / S / D**: Mișcare cameră.
+*   **SHIFT (Hold)**: Mișcare rapidă a camerei.
+*   **CLICK STÂNGA**: Plasează obiectul selectat.
+*   **SCROLL MOUSE**: Zoom In / Out sau derulare listă hărți.
 
 ---
 
 ## Mecanici de Joc
 
 ### 1. Resurse și Crafting
-Jucătorul poate aduna resurse din lume folosind unelte specifice:
-*   **Lemn (Wood):** Obținut din copaci (necesită Topor/Axe).
-*   **Piatră (Stone):** Obținută din roci (necesită Târnăcop/Pickaxe).
-*   **Cereale (Grain):** Obținute din plante (se pot culege cu mâna).
+Folosește unelte specifice pentru a colecta: **Lemn** (Topor), **Piatră** (Târnăcop) și **Cereale** (Manual). Folosește-le în meniul de Crafting pentru a supraviețui.
 
-Aceste resurse sunt folosite în meniul de **Crafting [C]** pentru a crea:
-*   **Pâine (Bread):** Restabilește 30 HP.
-*   **Monumente:** Oferă bonus permanent de atac (+5 DMG).
-*   **Fântâni (Fountains):** Restabilesc complet viața jucătorului.
+### 2. Lupta Progresivă
+Lupta necesită acum timing. Folosește Guard pentru a supraviețui asaltului inamicilor (Zombies, Skeletons, Hunters). Inamicii avansați lasă acum pradă valoroasă, inclusiv piese de armură.
 
-### 2. Lupta și Inamicii
-Lumea este populată de diverse creaturi ostile:
-*   **Zombie:** Inamic de bază, urmărește jucătorul.
-*   **Schelete:** Mai rapid și mai periculos.
-*   **Hunter:** Inamic avansat, care are o șansă de a lăsa pradă (drop) **piese de armură aleatorii** (Helmet, Chestplate, Pants, Boots) la înfrângere.
-
-Sistemul de luptă se bazează pe atac și apărare (Defense). Armurile reduc daunele primite.
-
-### 3. Economie și Shop
-Pe hartă sau în sate (plasate în editor) poți găsi un **Vendor (Negustor)**.
-*   Interacționează cu el atingându-l.
-*   Poți **vinde** resurse și echipament vechi pentru Aur (Gold).
-*   Poți **cumpăra** arme și unelte speciale, inclusiv iteme **Golden (Aurii)**, care sunt mult mai puternice și eficiente decât variantele standard de fier sau piatră.
-
-### 4. Progresie RPG
-*   **XP & Level:** Fiecare inamic învins și resursă colectată oferă XP. Creșterea în nivel mărește viața maximă și daunele.
-*   **Echipament:** Există sloturi pentru Coif, Platoșă, Pantaloni și Cizme.
-
----
-
-## Map Editor
-
-Jocul include un editor puternic care permite:
-*   **Creare Hărți:** Hărți personalizate de dimensiunea 100x100.
-*   **Paletă Obiecte:** Plasare de teren, apă, copaci, roci, inamici, clădiri, negustori și punctul de spawn al jucătorului.
-*   **Sistem de Salvare:** Hărțile sunt salvate local și pot fi jucate oricând.
-*   **Management:** Posibilitatea de a edita sau șterge hărți existente (cu confirmare).
+### 3. Progresie RPG
+Fiecare acțiune oferă XP. Creșterea în nivel îți deblochează atribute mai bune și îți permite să porți echipament de raritate mai mare (Common, Rare, Epic, Legendary).
 
 ---
 
 ## Tehnologii Utilizate
-
-Acest proiect a fost dezvoltat de la zero folosind limbajul **Java**, fără a utiliza motoare de joc externe (cum ar fi Unity sau Godot).
-
 *   **Limbaj:** Java (JDK 8+)
-*   **Grafică & UI:** Java AWT (Abstract Window Toolkit) și Java Swing pentru randare grafică 2D, gestionare ferestre și input.
-*   **Concepte:**
-    *   **Programare Orientată pe Obiecte (OOP):** Structură modulară cu clase pentru Entități, Hartă, Jucător, Inamici.
-    *   **Generare Procedurală:** Hărțile de joc sunt generate aleatoriu la fiecare "New Game".
-    *   **Serializare:** Salvarea și încărcarea hărților personalizate folosind `Serializable`.
-    *   **Game Loop:** Implementarea unui ciclu de joc clasic (Update -> Render) folosind `javax.swing.Timer`.
-
----
-
-## Cum să rulezi jocul
-
-Asigură-te că ai **Java 8** sau mai nou instalat.
-
-1.  **Compilare:**
-    Deschide un terminal în folderul rădăcină și rulează:
-    ```bash
-    javac --release 8 -d bin -sourcepath src src/*.java
-    ```
-
-2.  **Rulare:**
-    După compilare, pornește jocul cu:
-    ```bash
-    java -cp bin Main
-    ```
+*   **Grafică:** Java AWT/Swing (Fără engine extern).
+*   **Stocare:** Serializare Java pentru Save-uri și Hărți.
 
 ---
 
 **Dezvoltat în Java AWT/Swing.**
-*Versiune: 0.1 (Refactor & Save System Update)*
+*Versiune: 0.2 (Graphics & Combat Update)*

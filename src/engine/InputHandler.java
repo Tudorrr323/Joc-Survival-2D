@@ -14,7 +14,7 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
 
     private GamePanel gamePanel;
 
-    public boolean keyW, keyA, keyS, keyD, keyShift;
+    public boolean keyW, keyA, keyS, keyD, keyShift, keySpace;
     public int mouseX, mouseY;
     public boolean isMousePressed = false;
 
@@ -23,12 +23,16 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+        gamePanel.handleKeyTyped(e.getKeyChar());
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_SHIFT) keyShift = true;
-        gamePanel.handleKeyPressed(e.getKeyCode());
+        int k = e.getKeyCode();
+        if (k == KeyEvent.VK_SHIFT) keyShift = true;
+        if (k == KeyEvent.VK_SPACE) keySpace = true;
+        gamePanel.handleKeyPressed(k);
     }
 
     @Override
@@ -39,6 +43,7 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
         if(k == KeyEvent.VK_A || k == KeyEvent.VK_LEFT) keyA = false;
         if(k == KeyEvent.VK_D || k == KeyEvent.VK_RIGHT) keyD = false;
         if(k == KeyEvent.VK_SHIFT) keyShift = false;
+        if(k == KeyEvent.VK_SPACE) keySpace = false;
     }
 
     @Override
@@ -46,14 +51,18 @@ public class InputHandler implements KeyListener, MouseListener, MouseMotionList
 
     @Override
     public void mousePressed(MouseEvent e) {
-        isMousePressed = true;
-        gamePanel.handleMousePressed(e.getX(), e.getY());
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            isMousePressed = true;
+        }
+        gamePanel.handleMousePressed(e.getX(), e.getY(), e.getButton());
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        isMousePressed = false;
-        gamePanel.handleMouseReleased(e.getX(), e.getY());
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            isMousePressed = false;
+            gamePanel.handleMouseReleased(e.getX(), e.getY());
+        }
     }
 
     @Override
