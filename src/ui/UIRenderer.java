@@ -44,6 +44,7 @@ public class UIRenderer {
     public Rectangle[] charButtons;
     public Rectangle btnRibbon;
     public Rectangle btnCharStart;
+    public Rectangle btnNameBox;
     public Rectangle[] ribbonDropdownRects;
     public boolean showRibbonDropdown = false;
     public int selectedRibbonIndex = 0;
@@ -133,7 +134,7 @@ public class UIRenderer {
             // Hero Cards (Top Row)
             int btnSize = 150;
             int heroGap = (paperW - (numChars * btnSize)) / (numChars + 1); // Equal spacing
-            int startY = py + 80;
+            int startY = py + 60;
             
             for(int i=0; i<numChars; i++) {
                 int cx = px + heroGap + i * (btnSize + heroGap);
@@ -141,15 +142,18 @@ public class UIRenderer {
             }
             
             // Bottom Row (Now moved higher up, just below heroes)
-            int bottomY = py + 260;
+            int bottomY = py + 230;
             
             // Left: Sword Selector (300x80)
             int leftCenter = px + paperW / 4;
             btnRibbon = new Rectangle(leftCenter - 150, bottomY, 300, 80);
             
-            // Right: Start Button (320x90)
+            // Right: Name Input Box Area (Hitbox aligned with visual box)
             int rightCenter = px + 3 * paperW / 4;
-            btnCharStart = new Rectangle(rightCenter - 160, bottomY - 5, 320, 90);
+            btnNameBox = new Rectangle(rightCenter - 160, bottomY + 30, 320, 80);
+            
+            // Bottom Right: Start Button (Moved to the actual corner)
+            btnCharStart = new Rectangle(px + paperW - 340, py + paperH - 130, 320, 90);
         }
 
         initCraftingButtons();
@@ -186,7 +190,7 @@ public class UIRenderer {
         String title = "SURVIVAL 2D"; g2.drawString(title, w/2 - g2.getFontMetrics().stringWidth(title)/2, py + 35);
         
         g2.setColor(new Color(60, 40, 30)); g2.setFont(Assets.PIXEL_FONT != null ? Assets.PIXEL_FONT.deriveFont(20f) : new Font("Arial", Font.BOLD, 20));
-        String info = "v0.2 | Created by Tudor Baranga"; g2.drawString(info, w/2 - g2.getFontMetrics().stringWidth(info)/2, py + ph - 40);
+        String info = "v0.2.1 | Created by Tudor Baranga"; g2.drawString(info, w/2 - g2.getFontMetrics().stringWidth(info)/2, py + ph - 40);
 
         drawMenuButton(g2, btnStartGame, "NEW GAME", Assets.UI_BTN_BLUE, Assets.UI_BTN_BLUE_PR, true);
         if (gp.hasSaveFile) drawMenuButton(g2, btnContinue, "CONTINUE", Assets.UI_BTN_BLUE, Assets.UI_BTN_BLUE_PR, true);
@@ -390,15 +394,58 @@ public class UIRenderer {
 
                 g2.drawImage(rib, targetX, targetY, targetW, targetH, null);
                 
-                if (ribbonDropdownRects[i].contains(gp.inputHandler.mouseX, gp.inputHandler.mouseY)) {
-                    g2.setColor(new Color(255, 255, 255, 50));
-                    g2.fillRect(ribbonDropdownRects[i].x, ribbonDropdownRects[i].y, dw, dh);
+                if (i == selectedRibbonIndex) {
+                    g2.setColor(Color.GREEN);
+                    g2.setStroke(new BasicStroke(2));
+                    g2.drawRect(ribbonDropdownRects[i].x, ribbonDropdownRects[i].y, dw, dh);
+                    g2.setStroke(new BasicStroke(1));
                 }
                 
                 drawIndex++;
             }
         } else {
             ribbonDropdownRects = null;
+        }
+
+        // --- DRAW NAME INPUT BOX ---
+        if (btnNameBox != null) {
+            // Label above (Adjusted to stay at py + 250)
+            g2.setColor(Color.WHITE);
+            g2.setFont(Assets.PIXEL_FONT != null ? Assets.PIXEL_FONT.deriveFont(40f) : new Font("Arial", Font.BOLD, 22));
+            g2.drawString("HERO NAME", btnNameBox.x, btnNameBox.y - 10);
+
+            // "Ser" prefix (Adjusted to stay at py + 310)
+            String prefix = "Ser ";
+            g2.setFont(Assets.PIXEL_FONT != null ? Assets.PIXEL_FONT.deriveFont(40f) : new Font("Arial", Font.BOLD, 30));
+            int preW = g2.getFontMetrics().stringWidth(prefix);
+            g2.drawString(prefix, btnNameBox.x - preW - 5, btnNameBox.y + 50);
+
+            // Box Background (Aligned with hitbox)
+            if (Assets.UI_PAPER != null) {
+                draw9Slice(g2, Assets.UI_PAPER != null ? Assets.UI_PAPER : Assets.UI_PAPER, btnNameBox.x, btnNameBox.y, btnNameBox.width, btnNameBox.height);
+            } else {
+                g2.setColor(new Color(50, 50, 60));
+                g2.fillRect(btnNameBox.x, btnNameBox.y, btnNameBox.width, btnNameBox.height);
+            }
+
+            if (gp.isEditingHeroName) {
+                g2.setColor(Color.YELLOW);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawRect(btnNameBox.x, btnNameBox.y, btnNameBox.width, btnNameBox.height);
+                g2.setStroke(new BasicStroke(1));
+            }
+
+            // Name Text (Centered vertically in box)
+            g2.setColor(Color.BLACK);
+            String nameText = gp.heroNameInput.toString() + (gp.isEditingHeroName && (gp.tickCounter / 20) % 2 == 0 ? "|" : "");
+            g2.drawString(nameText, btnNameBox.x + 20, btnNameBox.y + 52);
+
+            // Validation message
+            if (gp.heroNameInput.length() > 12) {
+                g2.setColor(Color.RED);
+                g2.setFont(Assets.PIXEL_FONT != null ? Assets.PIXEL_FONT.deriveFont(30f) : new Font("Arial", Font.BOLD, 22));
+                g2.drawString("NAME IS TOO LONG!", btnNameBox.x, btnNameBox.y + btnNameBox.height + 30);
+            }
         }
         
         drawMenuButton(g2, btnCharStart, "START GAME", Assets.UI_BTN_BLUE, Assets.UI_BTN_BLUE_PR, true);
@@ -494,6 +541,7 @@ public class UIRenderer {
     public void drawHUD(Graphics2D g2, Player p) {
         drawHotbar(g2, p); g2.setColor(Color.RED); g2.fillRect(20, 20, 200, 20); g2.setColor(new Color(0, 100, 0)); g2.fillRect(20, 20, (int)(200 * ((double)p.getHealth()/p.getMaxHealth())), 20); g2.setColor(Color.WHITE); g2.drawRect(20, 20, 200, 20);
         g2.setFont(Assets.PIXEL_FONT != null ? Assets.PIXEL_FONT.deriveFont(14f) : new Font("Arial", Font.BOLD, 12)); g2.drawString("HP: " + p.getHealth() + "/" + p.getMaxHealth(), 30, 35);
+        g2.drawString("Level: " + p.getLevel(), 20, 55);
     }
 
     public void drawCraftingMenu(Graphics2D g2, Player p) {
@@ -760,7 +808,7 @@ public class UIRenderer {
         
         if (gp.loadingPlayer != null) {
             int px = (int)gp.loadingPlayer.visualX, py = (int)gp.loadingPlayer.visualY; 
-            IconRenderer.drawKnight(g2, px, py, gp.TILE_SIZE, gp.loadingPlayer.animState, gp.loadingPlayer.animFrame, gp.loadingPlayer.facingLeft);
+            IconRenderer.drawKnight(g2, px, py, gp.TILE_SIZE, gp.loadingPlayer);
         }
         if (gp.loadingEnemy != null) {
             int ex = (int)gp.loadingEnemy.visualX, ey = (int)gp.loadingEnemy.visualY; 
@@ -788,7 +836,10 @@ public class UIRenderer {
                     else if (e instanceof Enemy) IconRenderer.renderEnemy(g2, (Enemy)e, px, py, gp.TILE_SIZE);
                     else if (e instanceof WorldMap.Campfire) IconRenderer.drawCampfire(g2, px, py, gp.TILE_SIZE);
                     else if (e instanceof WorldMap.Tent) IconRenderer.drawTent(g2, px, py, gp.TILE_SIZE);
-                    else if (e instanceof WorldMap.PlayerStart) IconRenderer.drawKnight(g2, px, py, gp.TILE_SIZE, Player.AnimState.IDLE, 0, false);
+                    else if (e instanceof WorldMap.PlayerStart) {
+                        Player dummy = new Player("Start", 0, 0);
+                        IconRenderer.drawKnight(g2, px, py, gp.TILE_SIZE, dummy);
+                    }
                 } else { IconRenderer.renderWaterTile(g2, px, py, gp.TILE_SIZE, gp.tickCounter); }
             }
         }

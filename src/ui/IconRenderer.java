@@ -17,6 +17,7 @@ import utils.Enums;
 import entities.Enemy;
 import entities.Building;
 import entities.Player;
+import entities.Projectile;
 
 public class IconRenderer {
 
@@ -31,34 +32,121 @@ public class IconRenderer {
         g2.drawString(text, x, y);
     }
 
+    public static void drawProjectile(Graphics2D g2, Projectile p) {
+        if (utils.Assets.PROJECTILE_ARROW != null) {
+            AffineTransform old = g2.getTransform();
+            g2.translate(p.x, p.y);
+            g2.rotate(Math.toRadians(p.rotation));
+            // Arrow sprite is usually pointing right. Adjust scale if needed.
+            // Tiny Swords arrow is around 64x16? Let's assume standard sizing.
+            // Center it.
+            g2.drawImage(utils.Assets.PROJECTILE_ARROW, -32, -8, 64, 16, null);
+            g2.setTransform(old);
+        } else {
+            g2.setColor(Color.YELLOW);
+            g2.fillOval((int)p.x - 3, (int)p.y - 3, 6, 6);
+        }
+    }
+
     // --- PLAYER (KNIGHT) ---
-    public static void drawKnight(Graphics2D g2, int x, int y, int size, Player.AnimState state, int frame, boolean facingLeft) {
+    public static void drawKnight(Graphics2D g2, int x, int y, int size, Player player) {
+        if (player == null) return;
+        Player.AnimState state = player.animState;
+        int frame = player.animFrame;
+        boolean facingLeft = player.facingLeft;
+        
         BufferedImage sheet = Assets.WARRIOR_IDLE;
-        if (state == Player.AnimState.RUN) sheet = Assets.WARRIOR_RUN;
-        else if (state == Player.AnimState.ATTACK_1) sheet = Assets.WARRIOR_ATTACK_1;
-        else if (state == Player.AnimState.ATTACK_2) sheet = Assets.WARRIOR_ATTACK_2;
-        else if (state == Player.AnimState.BLOCK) sheet = Assets.WARRIOR_GUARD;
+        
+        // --- PAWN SPECIAL LOGIC ---
+        if (Assets.SELECTED_CHAR_INDEX == 3) {
+            items.Item held = player.getSelectedItem();
+            
+            if (state == Player.AnimState.IDLE) {
+                if (held == null) sheet = Assets.PAWN_IDLE_EMPTY;
+                else if (held.specificType == items.Item.Specific.SWORD) sheet = Assets.PAWN_IDLE_SWORD;
+                else if (held.specificType == items.Item.Specific.AXE) sheet = Assets.PAWN_IDLE_AXE;
+                else if (held.specificType == items.Item.Specific.PICKAXE) sheet = Assets.PAWN_IDLE_PICK;
+                else if (held.specificType == items.Item.Specific.WOOD) sheet = Assets.PAWN_IDLE_WOOD;
+                else sheet = Assets.PAWN_IDLE_EMPTY;
+            }
+            else if (state == Player.AnimState.RUN) {
+                if (held == null) sheet = Assets.PAWN_RUN_EMPTY;
+                else if (held.specificType == items.Item.Specific.SWORD) sheet = Assets.PAWN_RUN_SWORD;
+                else if (held.specificType == items.Item.Specific.AXE) sheet = Assets.PAWN_RUN_AXE;
+                else if (held.specificType == items.Item.Specific.PICKAXE) sheet = Assets.PAWN_RUN_PICK;
+                else if (held.specificType == items.Item.Specific.WOOD) sheet = Assets.PAWN_RUN_WOOD;
+                else sheet = Assets.PAWN_RUN_EMPTY;
+            }
+            else if (state == Player.AnimState.ATTACK_1 || state == Player.AnimState.ATTACK_2) {
+                // Force attack animation based on held item, regardless of direction (Pawn has simple anims)
+                if (held != null) {
+                    if (held.specificType == items.Item.Specific.SWORD) sheet = Assets.PAWN_INT_SWORD;
+                    else if (held.specificType == items.Item.Specific.AXE) sheet = Assets.PAWN_INT_AXE;
+                    else if (held.specificType == items.Item.Specific.PICKAXE) sheet = Assets.PAWN_INT_PICK;
+                    else sheet = Assets.PAWN_INT_SWORD; // Default
+                } else {
+                    sheet = Assets.PAWN_INT_SWORD;
+                }
+            }
+        } 
+        else {
+            // --- STANDARD LOGIC FOR OTHER CHARACTERS ---
+            if (state == Player.AnimState.RUN) {
+                sheet = Assets.WARRIOR_RUN;
+            } 
+            else if (state == Player.AnimState.ATTACK_1 || state == Player.AnimState.ATTACK_2) {
+                 if (player.attackDirY < 0) { // UP
+                     if (player.attackDirX != 0) sheet = Assets.WARRIOR_ATTACK_UP_RIGHT;
+                     else sheet = Assets.WARRIOR_ATTACK_UP;
+                 } else if (player.attackDirY > 0) { // DOWN
+                     if (player.attackDirX != 0) sheet = Assets.WARRIOR_ATTACK_DOWN_RIGHT;
+                     else sheet = Assets.WARRIOR_ATTACK_DOWN;
+                 } else { // SIDE
+                     sheet = Assets.WARRIOR_ATTACK_1;
+                 }
+            }
+            else if (state == Player.AnimState.BLOCK) {
+                 if (player.attackDirY < 0) { // UP
+                     if (player.attackDirX != 0) sheet = Assets.WARRIOR_GUARD_UP_RIGHT;
+                     else sheet = Assets.WARRIOR_GUARD_UP;
+                 } else if (player.attackDirY > 0) { // DOWN
+                     if (player.attackDirX != 0) sheet = Assets.WARRIOR_GUARD_DOWN_RIGHT;
+                     else sheet = Assets.WARRIOR_GUARD_DOWN;
+                 } else { // SIDE
+                     sheet = Assets.WARRIOR_GUARD;
+                 }
+            }
+        }
         
         if (sheet != null) {
-            int frameW = 192; // Source frame width
-            int frameH = 192;
+            // Assume square frames based on height to support different sprite sizes
+            int frameH = sheet.getHeight();
+            int frameW = frameH; 
             
             // Safety Check: Ensure frame index is valid for this sheet
             int maxFrames = sheet.getWidth() / frameW;
-            if (frame >= maxFrames) frame = 0;
+            if (frame >= maxFrames) frame = frame % maxFrames;
             
             int frameX = frame * frameW;
             
-            // Draw centered on tile (size x size). Sprite is large (192x192) with padding.
-            // We need to scale it down and offset it.
-            int drawSize = size * 3; // Scale 192 -> 180 (approx 3x tile size to cover padding)
-            int offX = x - (drawSize - size)/2;
-            int offY = y - (drawSize - size)/2 - (int)(size * 0.25); // Shift up slightly
+            // Scale logic: The standard 192px sprite fits well as 3x tile size.
+            // If sprite is larger/smaller, scale proportionally.
+            double scale = (size * 3.0) / 192.0;
+            int drawW = (int)(frameW * scale);
+            int drawH = (int)(frameH * scale);
+            
+            // Center the drawing rect on the tile center
+            // Tile center is x + size/2, y + size/2
+            // Image center is drawW/2, drawH/2
+            // Top-left should be: (x + size/2) - drawW/2
+            
+            int offX = x + size/2 - drawW/2;
+            int offY = y + size/2 - drawH/2 - (int)(size * 0.25); // Keep the slight vertical offset bias
             
             if (facingLeft) {
-                g2.drawImage(sheet, offX + drawSize, offY, offX, offY + drawSize, frameX, 0, frameX + frameW, frameH, null);
+                g2.drawImage(sheet, offX + drawW, offY, offX, offY + drawH, frameX, 0, frameX + frameW, frameH, null);
             } else {
-                g2.drawImage(sheet, offX, offY, offX + drawSize, offY + drawSize, frameX, 0, frameX + frameW, frameH, null);
+                g2.drawImage(sheet, offX, offY, offX + drawW, offY + drawH, frameX, 0, frameX + frameW, frameH, null);
             }
         } else {
             // Fallback
@@ -255,9 +343,33 @@ public class IconRenderer {
     public static void drawChestplate(Graphics2D g2, int x, int y, int size) { g2.setColor(Color.GRAY); int[] bx = {x+15, x+45, x+50, x+10}; int[] by = {y+10, y+10, y+50, y+50}; g2.fillPolygon(bx, by, 4); }
     public static void drawPants(Graphics2D g2, int x, int y, int size) { g2.setColor(Color.GRAY); g2.fillRect(x+15, y+10, size-30, 15); g2.fillRect(x+15, y+25, 12, 20); g2.fillRect(x+size-27, y+25, 12, 20); }
     public static void drawBoots(Graphics2D g2, int x, int y, int size) { g2.setColor(Color.GRAY); g2.fillRoundRect(x+10, y+25, 12, 15, 5, 5); g2.fillRoundRect(x+size-22, y+25, 12, 15, 5, 5); }
-    public static void drawSword(Graphics2D g2, int x, int y, int size) { double s = size/60.0; g2.setColor(new Color(220, 220, 230)); g2.fillRect(x+(int)(28*s), y+(int)(5*s), (int)(4*s), (int)(40*s)); g2.setColor(new Color(180, 140, 20)); g2.fillRect(x+(int)(20*s), y+(int)(40*s), (int)(20*s), (int)(6*s)); }
-    public static void drawAxe(Graphics2D g2, int x, int y, int size) { g2.setColor(new Color(100, 60, 20)); g2.fillRect(x+size/2-2, y+5, 4, size-10); g2.setColor(Color.LIGHT_GRAY); g2.fillArc(x+size/2-2, y+5, 18, 18, 90, 180); }
-    public static void drawPickaxe(Graphics2D g2, int x, int y, int size) { g2.setColor(new Color(100, 60, 20)); g2.fillRect(x+size/2-2, y+5, 4, size-10); g2.setColor(Color.GRAY); g2.setStroke(new BasicStroke(3)); g2.drawArc(x+size/2-12, y+5, 30, 15, 0, 180); g2.setStroke(new BasicStroke(1)); }
+    public static void drawSword(Graphics2D g2, int x, int y, int size) { 
+        if (Assets.ITEM_SWORD != null) {
+            int drawSize = (int)(size * 1.5);
+            int off = (drawSize - size) / 2;
+            g2.drawImage(Assets.ITEM_SWORD, x - off, y - off, drawSize, drawSize, null);
+        } else { 
+            double s = size/60.0; g2.setColor(new Color(220, 220, 230)); g2.fillRect(x+(int)(28*s), y+(int)(5*s), (int)(4*s), (int)(40*s)); g2.setColor(new Color(180, 140, 20)); g2.fillRect(x+(int)(20*s), y+(int)(40*s), (int)(20*s), (int)(6*s)); 
+        } 
+    }
+    public static void drawAxe(Graphics2D g2, int x, int y, int size) { 
+        if (Assets.ITEM_AXE != null) {
+            int drawSize = (int)(size * 1.5);
+            int off = (drawSize - size) / 2;
+            g2.drawImage(Assets.ITEM_AXE, x - off, y - off, drawSize, drawSize, null);
+        } else { 
+            g2.setColor(new Color(100, 60, 20)); g2.fillRect(x+size/2-2, y+5, 4, size-10); g2.setColor(Color.LIGHT_GRAY); g2.fillArc(x+size/2-2, y+5, 18, 18, 90, 180); 
+        } 
+    }
+    public static void drawPickaxe(Graphics2D g2, int x, int y, int size) { 
+        if (Assets.ITEM_PICKAXE != null) {
+            int drawSize = (int)(size * 1.5);
+            int off = (drawSize - size) / 2;
+            g2.drawImage(Assets.ITEM_PICKAXE, x - off, y - off, drawSize, drawSize, null);
+        } else { 
+            g2.setColor(new Color(100, 60, 20)); g2.fillRect(x+size/2-2, y+5, 4, size-10); g2.setColor(Color.GRAY); g2.setStroke(new BasicStroke(3)); g2.drawArc(x+size/2-12, y+5, 30, 15, 0, 180); g2.setStroke(new BasicStroke(1)); 
+        } 
+    }
     public static void drawCampfire(Graphics2D g2, int x, int y, int size) { g2.setColor(new Color(60, 40, 20)); g2.setStroke(new BasicStroke(3)); g2.drawLine(x + 15, y + size - 15, x + size - 15, y + size - 25); g2.setStroke(new BasicStroke(1)); g2.setColor(Assets.FIRE_ORANGE); g2.fillOval(x + 15, y + size - 35, 30, 20); }
     public static void drawTent(Graphics2D g2, int x, int y, int size) { int[] px = {x + 10, x + size/2, x + size - 10}; int[] py = {y + size - 10, y + 10, y + size - 10}; g2.setColor(Assets.TENT_BASE); g2.fillPolygon(px, py, 3); }
     

@@ -56,12 +56,11 @@ public class Enemy extends GameCharacter {
         int distSq = diffX*diffX + diffY*diffY;
 
         // 1. Anti-Lag: Ignora daca e departe (marit putin raza pentru hunterii din tabere)
-        if (distSq > 150) return false; 
+        if (distSq > 200) return false; 
 
-        // 2. Atac
-        if (distSq <= 1) { 
+        // 2. Atac (Acum include si diagonalele: 1^2 + 1^2 = 2)
+        if (distSq <= 2) { 
             if (attackCooldown <= 0) {
-                // p.takeDamage(this.attack); // Removed: GamePanel handles damage/block logic now
                 attackCooldown = 60; 
                 return true; 
             }
@@ -73,37 +72,48 @@ public class Enemy extends GameCharacter {
         if (moveTimer > moveSpeedThreshold) { 
             moveTimer = 0;
             
-            int moveX = 0;
-            int moveY = 0;
+            int dirX = 0; if (diffX > 0) dirX = 1; else if (diffX < 0) dirX = -1;
+            int dirY = 0; if (diffY > 0) dirY = 1; else if (diffY < 0) dirY = -1;
             
-            // Logica: Ne miscam pe axa unde distanta e mai mare
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 0) moveX = 1; else moveX = -1;
+            // Smart Pathing: Incearca axa principala, daca e blocata, incearca axa secundara
+            boolean moved = false;
+            
+            if (Math.abs(diffX) >= Math.abs(diffY)) {
+                // Preferam X
+                if (dirX != 0) moved = attemptMove(dirX, 0, map);
+                // Daca X e blocat, incercam Y
+                if (!moved && dirY != 0) moved = attemptMove(0, dirY, map);
             } else {
-                if (diffY > 0) moveY = 1; else moveY = -1;
+                // Preferam Y
+                if (dirY != 0) moved = attemptMove(0, dirY, map);
+                // Daca Y e blocat, incercam X
+                if (!moved && dirX != 0) moved = attemptMove(dirX, 0, map);
             }
-            
-            // Calculam coordonatele viitoare
-            int nextX = this.x + moveX;
-            int nextY = this.y + moveY;
-            
-            // Verificam ce se afla la destinatie
-            Object target = map.getEntityAt(nextX, nextY);
+        }
+        return false;
+    }
 
-            // MODIFICAT: Acum permitem trecerea prin NULL, CORTURI sau CEREALE
-            if (target == null || target instanceof WorldMap.Tent || target instanceof Grain) {
-                
-                // A. Punem inapoi ce aveam sub noi la pozitia veche
-                map.setEntityAt(this.x, this.y, savedTile);
+    private boolean attemptMove(int dx, int dy, WorldMap map) {
+        int nextX = this.x + dx;
+        int nextY = this.y + dy;
+        
+        if (nextX < 0 || nextX >= map.cols || nextY < 0 || nextY >= map.rows) return false;
+        
+        Object target = map.getEntityAt(nextX, nextY);
 
-                // B. Salvam ce se afla la noua pozitie (ca sa nu distrugem cortul)
-                savedTile = target;
+        // Permitem trecerea prin NULL, CORTURI sau CEREALE
+        if (target == null || target instanceof WorldMap.Tent || target instanceof Grain) {
+            // A. Punem inapoi ce aveam sub noi
+            map.setEntityAt(this.x, this.y, savedTile);
 
-                // C. Mutam inamicul
-                this.x = nextX;
-                this.y = nextY;
-                map.setEntityAt(this.x, this.y, this);
-            }
+            // B. Salvam ce se afla la noua pozitie
+            savedTile = target;
+
+            // C. Mutam inamicul
+            this.x = nextX;
+            this.y = nextY;
+            map.setEntityAt(this.x, this.y, this);
+            return true;
         }
         return false;
     }

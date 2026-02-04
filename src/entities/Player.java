@@ -9,6 +9,7 @@
 package entities;
 
 import items.Item;
+import utils.Assets;
 import utils.Enums;
 
 public class Player extends GameCharacter {
@@ -138,23 +139,23 @@ public class Player extends GameCharacter {
     public void addXp(int amount) { this.xp += amount; if (this.xp >= nextLevelXp) { level++; xp -= nextLevelXp; nextLevelXp = (int)(nextLevelXp * 1.5); maxHealth += 20; health = maxHealth; damageBonus += 5; levelUpAnim = 60; } }
     public int getFrameCount() {
         switch(animState) {
-            case IDLE: return 8;
-            case RUN: return 6;
-            case ATTACK_1: return 6;
-            case ATTACK_2: return 6;
-            case BLOCK: return 3;
+            case IDLE: return Assets.FRAMES_IDLE;
+            case RUN: return Assets.FRAMES_RUN;
+            case ATTACK_1: return Assets.FRAMES_ATTACK;
+            case ATTACK_2: return Assets.FRAMES_ATTACK;
+            case BLOCK: return Assets.FRAMES_BLOCK;
             default: return 6;
         }
     }
 
-    public void updateVisuals(int tileSize, boolean spaceHeld) { 
+    public void updateVisuals(int tileSize, boolean spaceHeld, boolean isDashing) { 
         float targetX = x * tileSize;
         float targetY = y * tileSize;
         
         // Determine state
         boolean moving = Math.abs(targetX - visualX) > 1 || Math.abs(targetY - visualY) > 1;
         
-        if (!actionLocked) {
+        if (!actionLocked && !isDashing) {
             if (spaceHeld) {
                 animState = AnimState.BLOCK;
                 actionLocked = true;
@@ -162,12 +163,15 @@ public class Player extends GameCharacter {
                 animTick = 0;
             } else if (moving) {
                 animState = AnimState.RUN;
-                if (targetX < visualX) facingLeft = true;
-                else if (targetX > visualX) facingLeft = false;
+                // Add tolerance to prevent flipping on small overshoots
+                if (targetX < visualX - 5) facingLeft = true;
+                else if (targetX > visualX + 5) facingLeft = false;
             } else {
                 animState = AnimState.IDLE;
             }
         }
+        // REMOVED explicit facing logic that was outside/overriding
+        // Facing is now strictly controlled by input or movement when NOT locked.
         
         // Animation loop
         animTick++;

@@ -74,6 +74,7 @@ public class GamePanel extends JPanel {
     
     public List<VisualEffect> effects;
     public List<Enemy> activeEnemies;
+    public List<Projectile> projectiles = new ArrayList<>();
     
     public final int TILE_SIZE = 60;
     public float camX, camY;
@@ -130,7 +131,9 @@ public class GamePanel extends JPanel {
     // Text Input State
     public int editingSaveSlot = -1;
     public boolean isCreatingMap = false;
+    public boolean isEditingHeroName = false;
     public StringBuilder currentTypingText = new StringBuilder();
+    public StringBuilder heroNameInput = new StringBuilder("Hero");
 
     public GamePanel() {
         this.setFocusable(true);
@@ -219,7 +222,7 @@ public class GamePanel extends JPanel {
                 menuPlayer.y = ny;
             }
         }
-        menuPlayer.updateVisuals(TILE_SIZE, false);
+        menuPlayer.updateVisuals(TILE_SIZE, false, false);
         
         // Move enemies randomly
         if (tickCounter % 4 == 0) {
@@ -299,11 +302,11 @@ public class GamePanel extends JPanel {
                 try {
                     FileInputStream fis = new FileInputStream(selectedMapFile); ObjectInputStream ois = new ObjectInputStream(fis); WorldMap m = (WorldMap) ois.readObject(); ois.close(); map = m;
                     int sx = map.cols/2, sy = map.rows/2; for(int r=0; r<map.rows; r++) for(int c=0; c<map.cols; c++) if (map.grid[r][c] instanceof WorldMap.PlayerStart) { sx=c; sy=r; map.grid[r][c]=null; break; }
-                    player = new Player("Hero", sx, sy); map.updateExploration(sx, sy, 10);
+                    player = new Player("Ser " + heroNameInput.toString(), sx, sy); map.updateExploration(sx, sy, 10);
                 } catch (Exception e) { e.printStackTrace(); }
                 selectedMapFile = null;
             } else {
-                map = new WorldMap(100, 100); map.clearCenter(); int cx = map.cols / 2; int cy = map.rows / 2; player = new Player("Hero", cx, cy);
+                map = new WorldMap(100, 100); map.clearCenter(); int cx = map.cols / 2; int cy = map.rows / 2; player = new Player("Ser " + heroNameInput.toString(), cx, cy);
                 map.updateExploration(cx, cy, 10);
             }
             
@@ -311,7 +314,7 @@ public class GamePanel extends JPanel {
             player.inventory[1] = new Item("Iron Axe", Item.Type.TOOL, Item.Specific.AXE, 10);
             player.inventory[2] = new Item("Iron Pickaxe", Item.Type.TOOL, Item.Specific.PICKAXE, 10);
             
-            effects = new ArrayList<>(); activeEnemies = new ArrayList<>();
+            effects = new ArrayList<>(); activeEnemies = new ArrayList<>(); projectiles = new ArrayList<>();
             for(int r=0; r<map.rows; r++) { for(int c=0; c<map.cols; c++) { Object o = map.getEntityAt(c, r); if (o instanceof Enemy) { Enemy e = (Enemy)o; e.setPos(c, r); activeEnemies.add(e); } } }
             generateShopStock(); camX = player.visualX - getWidth()/2; camY = player.visualY - getHeight()/2;
         });
@@ -342,7 +345,7 @@ public class GamePanel extends JPanel {
                     }
                     if (loadingPlayer.visualX > getWidth() + 50) { loadingPlayer.visualX = -50; loadingEnemy.visualX = getWidth() + 50; loadingEnemy.visualY = getHeight() / 2 + 70; loadingEnemy.healFull(); loadingDead = false; loadingVy = 0; }
                 }
-                loadingPlayer.updateVisuals(TILE_SIZE, false);
+                loadingPlayer.updateVisuals(TILE_SIZE, false, false);
             }
             repaint(); return;
         }
@@ -370,6 +373,32 @@ public class GamePanel extends JPanel {
         tickCounter++; if (attackAnimFrame > 0) attackAnimFrame--;
         if(currentState == GameState.PLAYING) {
             updatePlayerMovement();
+            
+            // Set Guard direction ONCE when Space is first pressed
+            if (inputHandler.keySpace && !player.actionLocked) {
+                float px = player.visualX - camX + TILE_SIZE/2;
+                float py = player.visualY - camY + TILE_SIZE/2;
+                float dx = inputHandler.mouseX - px;
+                float dy = inputHandler.mouseY - py;
+                
+                boolean isDiagonal = Math.min(Math.abs(dx), Math.abs(dy)) > 0.4 * Math.max(Math.abs(dx), Math.abs(dy));
+                
+                if (isDiagonal) {
+                    player.attackDirX = dx > 0 ? 1 : -1;
+                    player.attackDirY = dy > 0 ? 1 : -1;
+                    player.facingLeft = dx < 0;
+                } else {
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        player.attackDirX = dx > 0 ? 1 : -1;
+                        player.attackDirY = 0;
+                        player.facingLeft = dx < 0; 
+                    } else {
+                        player.attackDirX = 0;
+                        player.attackDirY = dy > 0 ? 1 : -1;
+                        if (Math.abs(dx) > 1) player.facingLeft = dx < 0; 
+                    }
+                }
+            }
             
             // Process Dash
             if (Math.abs(playerDashX) > 0.1f || Math.abs(playerDashY) > 0.1f) {
@@ -411,6 +440,79 @@ public class GamePanel extends JPanel {
             }
             
             processCombat();
+            
+            // Update Projectiles
+            for (int i = 0; i < projectiles.size(); i++) {
+                Projectile p = projectiles.get(i);
+                p.update();
+                
+                boolean destroyed = false;
+                Rectangle pRect = new Rectangle((int)p.x - 15, (int)p.y - 15, 30, 30); // Larger Hitbox
+                
+                // 1. Check Enemies FIRST (Prioritize hitting enemies)
+                float pCx = p.x; 
+                float pCy = p.y;
+                
+                for (Enemy e : activeEnemies) {
+                    // Check VISUAL center
+                    float eCx = e.visualX + 30; 
+                    float eCy = e.visualY + 30;
+                    float dx = pCx - eCx;
+                    float dy = pCy - eCy;
+                    float distSq = dx*dx + dy*dy;
+                    
+                    // Check LOGICAL center (Grid position converted to pixels)
+                    // This helps if visual lags behind
+                    float lCx = e.x * TILE_SIZE + 30;
+                    float lCy = e.y * TILE_SIZE + 30;
+                    float ldx = pCx - lCx;
+                    float ldy = pCy - lCy;
+                    float lDistSq = ldx*ldx + ldy*ldy;
+                    
+                    // Strict Grid-Based Collision for Projectiles
+                    // Calculate projectile's current grid position
+                    int pGridX = (int)(p.x / TILE_SIZE);
+                    int pGridY = (int)(p.y / TILE_SIZE);
+                    
+                    // Check if projectile is in the same grid cell as the enemy
+                    boolean hit = (pGridX == e.x && pGridY == e.y);
+                    
+                    // Optional: Keep a small distance check ONLY if grid matches (for visual precision within the tile)
+                    if (hit) { 
+                        if (lDistSq > 1600) hit = false; // 40px radius from center of tile
+                    }
+                    
+                    if (hit) { 
+                        e.takeDamage(p.damage);
+                        effects.add(new VisualEffect(e.x * TILE_SIZE, e.y * TILE_SIZE, "HIT", Color.WHITE, 20));
+                        systemMessage = "HIT CONFIRMED!"; systemMessageTimer = 60; // Debug
+                        if(!e.isAlive()) { 
+                            map.setEntityAt(e.x, e.y, e.getSavedTile()); activeEnemies.remove(e); player.addXp(50); effects.add(new VisualEffect(e.visualX, e.visualY, "+50 XP", Color.YELLOW, 30)); 
+                            int gold = 5 + (int)(Math.random() * 11); player.addGold(gold); effects.add(new VisualEffect(e.visualX, e.visualY - 20, "+" + gold + " G", new Color(255, 215, 0), 40));
+                        }
+                        destroyed = true;
+                        break;
+                    }
+                }
+                
+                // 2. Check Walls/Obstacles if not hit enemy
+                if (!destroyed) {
+                    int gc = (int)((p.x) / TILE_SIZE);
+                    int gr = (int)((p.y) / TILE_SIZE);
+                    
+                    if (gc >= 0 && gc < map.cols && gr >= 0 && gr < map.rows) {
+                        Object obj = map.getEntityAt(gc, gr);
+                        if (obj instanceof Tree || obj instanceof Rock || obj instanceof Building) {
+                            destroyed = true; // Stop at obstacle
+                        }
+                    }
+                }
+                
+                if (destroyed || !p.active) {
+                    projectiles.remove(i);
+                    i--;
+                }
+            }
         }
         
         // Disable standard visual interpolation if dashing to avoid conflict/jitter?
@@ -419,7 +521,14 @@ public class GamePanel extends JPanel {
         // Dash velocity PUSHES visual towards grid (or past it).
         // Let's try combining them.
         
-        player.updateVisuals(TILE_SIZE, inputHandler.keySpace);
+        boolean isDashing = Math.abs(playerDashX) > 0.1f || Math.abs(playerDashY) > 0.1f;
+        player.updateVisuals(TILE_SIZE, inputHandler.keySpace, isDashing);
+        
+        // Enforce facing direction during dash slide to prevent flip
+        if (Math.abs(playerDashX) > 0.5f) {
+            if (playerDashX > 0) player.facingLeft = false;
+            else player.facingLeft = true;
+        }
         
         // Add dash velocity effect to visuals AFTER updateVisuals
         // (This makes it feel like a force is pushing the sprite)
@@ -505,23 +614,105 @@ public class GamePanel extends JPanel {
 
     private void processCombat() {
         if (player.actionLocked && (player.animState == Player.AnimState.ATTACK_1 || player.animState == Player.AnimState.ATTACK_2)) {
-            // Trigger hit on frame 3 (middle of swing)
-            if (player.animFrame == 3 && !player.hitTriggered) {
+            // Trigger hit on the middle frame of the animation
+            int hitFrame = player.getFrameCount() / 2;
+            if (hitFrame < 1 && player.getFrameCount() > 1) hitFrame = 1; 
+            
+            if (player.animFrame == hitFrame && !player.hitTriggered) {
                 player.hitTriggered = true;
+                
+                // Archer Logic (Index 2)
+                if (selectedCharIndex == 2) {
+                    // 1. Check for Melee Interaction (Resources/Buildings) at Range 1
+                    int tx = player.x + player.attackDirX;
+                    int ty = player.y + player.attackDirY;
+                    boolean meleeAction = false;
+                    
+                    if (tx >= 0 && tx < map.cols && ty >= 0 && ty < map.rows) {
+                        Object target = map.getEntityAt(tx, ty);
+                        if (target instanceof ResourceEntity || target instanceof Building || target instanceof Vendor) {
+                            interactWith(target, tx, ty);
+                            meleeAction = true;
+                        }
+                    }
+                    
+                    // 2. If no melee interaction, Spawn Projectile
+                    if (!meleeAction) {
+                        float px = player.visualX + 30; // Center
+                        float py = player.visualY + 30;
+                        
+                        float vx = player.attackDirX * 10.0f;
+                        float vy = player.attackDirY * 10.0f;
+                        
+                        // Rotation
+                        float rot = 0;
+                        if (player.attackDirX > 0) { 
+                            if (player.attackDirY < 0) rot = -45;
+                            else if (player.attackDirY > 0) rot = 45;
+                            else rot = 0;
+                        } else if (player.attackDirX < 0) {
+                            if (player.attackDirY < 0) rot = 225; 
+                            else if (player.attackDirY > 0) rot = 135; 
+                            else rot = 180;
+                        } else {
+                            if (player.attackDirY < 0) rot = -90;
+                            else if (player.attackDirY > 0) rot = 90;
+                        }
+                        
+                        projectiles.add(new Projectile(px, py, vx, vy, rot, player.getTotalDamage()));
+                    }
+                    return; // Skip standard melee logic
+                }
                 
                 int tx = player.x + player.attackDirX;
                 int ty = player.y + player.attackDirY;
                 
-                if (tx >= 0 && tx < map.cols && ty >= 0 && ty < map.rows) {
-                    Object target = map.getEntityAt(tx, ty);
-                    if (target != null) {
-                        // Bonus damage for heavy attack (Attack 2)
-                        if (player.animState == Player.AnimState.ATTACK_2) {
-                            player.damageBonus += 10; // Temporary bonus
-                            interactWith(target, tx, ty);
-                            player.damageBonus -= 10; // Remove bonus
-                        } else {
-                            interactWith(target, tx, ty);
+                // Lancer Special Logic (Index 1)
+                if (selectedCharIndex == 1) {
+                    int farX = tx + player.attackDirX;
+                    int farY = ty + player.attackDirY;
+                    boolean hitSomething = false;
+                    boolean isCardinal = (player.attackDirX == 0 || player.attackDirY == 0);
+                    
+                    // 1. Check Range 1 (Near) - Priority
+                    if (tx >= 0 && tx < map.cols && ty >= 0 && ty < map.rows) {
+                        Object target = map.getEntityAt(tx, ty);
+                        // Ignore WATER so we can attack over it (it proceeds to step 2)
+                        if (target != null && !"WATER".equals(target)) {
+                            if (target instanceof Enemy) {
+                                // Apply half damage penalty for close range enemy
+                                int originalBonus = player.damageBonus;
+                                player.damageBonus -= (player.getTotalDamage() / 2); 
+                                interactWith(target, tx, ty);
+                                player.damageBonus = originalBonus; 
+                                hitSomething = true;
+                            } else {
+                                // Resources/Buildings - No penalty
+                                interactWith(target, tx, ty);
+                                hitSomething = true;
+                            }
+                        }
+                    }
+                    
+                    // 2. Check Range 2 (Far) - Only if cardinal direction and nothing hit at Range 1
+                    if (isCardinal && !hitSomething && farX >= 0 && farX < map.cols && farY >= 0 && farY < map.rows) {
+                        Object target = map.getEntityAt(farX, farY);
+                        if (target instanceof Enemy || target instanceof ResourceEntity) {
+                            interactWith(target, farX, farY);
+                        }
+                    }
+                } else {
+                    // Standard Logic (Warrior etc)
+                    if (tx >= 0 && tx < map.cols && ty >= 0 && ty < map.rows) {
+                        Object target = map.getEntityAt(tx, ty);
+                        if (target != null) {
+                            if (player.animState == Player.AnimState.ATTACK_2) {
+                                player.damageBonus += 10;
+                                interactWith(target, tx, ty);
+                                player.damageBonus -= 10;
+                            } else {
+                                interactWith(target, tx, ty);
+                            }
                         }
                     }
                 }
@@ -612,7 +803,9 @@ public class GamePanel extends JPanel {
         if (map == null || player == null) { drawCursor(g2); return; }
         
         g2.setColor(Assets.WATER); g2.fillRect(0, 0, getWidth(), getHeight());
-        g2.translate(-camX, -camY); drawWorld(g2); drawPlayer(g2); for(VisualEffect ve : effects) ve.draw(g2); g2.translate(camX, camY);
+        g2.translate(-camX, -camY); drawWorld(g2); drawPlayer(g2); 
+        for(Projectile p : projectiles) IconRenderer.drawProjectile(g2, p);
+        for(VisualEffect ve : effects) ve.draw(g2); g2.translate(camX, camY);
         if (currentState != GameState.MENU) uiRenderer.drawHUD(g2, player); 
         if (currentState == GameState.CRAFTING) uiRenderer.drawCraftingMenu(g2, player); if (currentState == GameState.SHOP) uiRenderer.drawShopMenu(g2, player); if (currentState == GameState.INVENTORY) uiRenderer.drawInventoryMenu(g2, player); if (currentState == GameState.PAUSED) uiRenderer.drawPauseMenu(g2); 
         if (currentState == GameState.EXIT_GAME_CONFIRM) { uiRenderer.drawPauseMenu(g2); uiRenderer.drawExitGameConfirmation(g2); }
@@ -665,7 +858,7 @@ public class GamePanel extends JPanel {
             IconRenderer.renderEnemy(g2, e, (int)e.visualX, (int)e.visualY, TILE_SIZE);
         }
         // Draw Player
-        IconRenderer.drawKnight(g2, (int)menuPlayer.visualX, (int)menuPlayer.visualY, TILE_SIZE, menuPlayer.animState, menuPlayer.animFrame, menuPlayer.facingLeft);
+        IconRenderer.drawKnight(g2, (int)menuPlayer.visualX, (int)menuPlayer.visualY, TILE_SIZE, menuPlayer);
     }
 
     private void drawWorld(Graphics2D g2) {
@@ -687,7 +880,7 @@ public class GamePanel extends JPanel {
 
             
 
-            IconRenderer.drawKnight(g2, x, y, TILE_SIZE, player.animState, player.animFrame, player.facingLeft);
+            IconRenderer.drawKnight(g2, x, y, TILE_SIZE, player);
 
     
 
@@ -697,22 +890,32 @@ public class GamePanel extends JPanel {
 
             g2.setColor(Color.WHITE); g2.setFont(Assets.PIXEL_FONT != null ? Assets.PIXEL_FONT.deriveFont(14f) : new Font("Arial", Font.BOLD, 14));
 
-            String lv = "Lv." + player.getLevel(); g2.drawString(lv, x+30-g2.getFontMetrics().stringWidth(lv)/2, y-5);
+            String name = player.getName(); g2.drawString(name, x+30-g2.getFontMetrics().stringWidth(name)/2, y-5);
 
         }
     
     public void handleKeyTyped(char c) {
-        if (editingSaveSlot != -1 || isCreatingMap) {
+        if (editingSaveSlot != -1 || isCreatingMap || isEditingHeroName) {
+            StringBuilder target = isEditingHeroName ? heroNameInput : currentTypingText;
+            int limit = isEditingHeroName ? 15 : 20; // Allow slightly more for name if needed, but requested limit is coming in UI
+
             if (c == KeyEvent.VK_BACK_SPACE) {
-                if (currentTypingText.length() > 0) currentTypingText.deleteCharAt(currentTypingText.length() - 1);
+                if (target.length() > 0) target.deleteCharAt(target.length() - 1);
             } else if (c != KeyEvent.VK_ENTER && c != KeyEvent.VK_ESCAPE && !Character.isISOControl(c)) {
-                if (currentTypingText.length() < 20) currentTypingText.append(c);
+                if (target.length() < limit) target.append(c);
             }
             repaint();
         }
     }
     
     public void handleKeyPressed(int k) {
+        if (isEditingHeroName) {
+            if (k == KeyEvent.VK_ENTER || k == KeyEvent.VK_ESCAPE) {
+                isEditingHeroName = false;
+            }
+            repaint();
+            return;
+        }
         if (editingSaveSlot != -1) {
             if (k == KeyEvent.VK_ENTER) {
                 if (currentTypingText.length() == 0) {
@@ -765,9 +968,43 @@ public class GamePanel extends JPanel {
         else if (currentState == GameState.PLAYING) {
              if (k == KeyEvent.VK_W || k == KeyEvent.VK_UP) inputHandler.keyW = true; if (k == KeyEvent.VK_S || k == KeyEvent.VK_DOWN) inputHandler.keyS = true; if (k == KeyEvent.VK_A || k == KeyEvent.VK_LEFT) inputHandler.keyA = true; if (k == KeyEvent.VK_D || k == KeyEvent.VK_RIGHT) inputHandler.keyD = true;
              if (k == KeyEvent.VK_M) currentState = GameState.MAP; 
-                          if (k >= KeyEvent.VK_1 && k <= KeyEvent.VK_5) player.selectedSlot = k - KeyEvent.VK_1; 
+             if (k >= KeyEvent.VK_1 && k <= KeyEvent.VK_5) player.selectedSlot = k - KeyEvent.VK_1; 
                           
-                          if (k == KeyEvent.VK_E) useCurrentItem(player.x, player.y); // Moved Item Use to E
+             if (k == KeyEvent.VK_Q && !player.actionLocked) {
+                 int tx = player.x + player.attackDirX;
+                 int ty = player.y + player.attackDirY;
+                 
+                 if (tx >= 0 && tx < map.cols && ty >= 0 && ty < map.rows) {
+                     Object t = map.getEntityAt(tx, ty);
+                     if (t == null || t instanceof WorldMap.Tent || t instanceof WorldMap.Campfire) {
+                         player.x = tx; player.y = ty;
+                         map.updateExploration(tx, ty, 8);
+                         
+                         // Visuals
+                         playerDashX = player.attackDirX * 12.0f;
+                         playerDashY = player.attackDirY * 12.0f;
+                         
+                         // Particle
+                         if (Assets.PARTICLE_DUST_01 != null) {
+                             float rot = 0; boolean flip = false;
+                             if (player.attackDirX > 0) { flip = true; if (player.attackDirY < 0) rot = -45; else if (player.attackDirY > 0) rot = 45; } 
+                             else if (player.attackDirX < 0) { if (player.attackDirY < 0) rot = 45; else if (player.attackDirY > 0) rot = -45; } 
+                             else { if (player.attackDirY < 0) rot = -90; else if (player.attackDirY > 0) rot = 90; }
+                             
+                             float px = player.visualX + 30; float py = player.visualY + 30;
+                             effects.add(new VisualEffect(px, py, Assets.PARTICLE_DUST_01, 8, flip, rot));
+                         }
+                         
+                         // Lock action to match other dash behaviors and prevent flip
+                         player.actionLocked = true;
+                         player.animState = Player.AnimState.IDLE;
+                         player.animFrame = 0;
+                         player.animTick = 0;
+                     }
+                 }
+             }
+
+             if (k == KeyEvent.VK_E) useCurrentItem(player.x, player.y); // Moved Item Use to E
                           if (k == KeyEvent.VK_I) currentState = GameState.INVENTORY; if (k == KeyEvent.VK_C) currentState = GameState.CRAFTING;
         } else if (currentState == GameState.INVENTORY || currentState == GameState.CRAFTING) { if (k == KeyEvent.VK_I || k == KeyEvent.VK_C) currentState = GameState.PLAYING; }
         else if (currentState == GameState.MAP) { if (k == KeyEvent.VK_M) currentState = GameState.PLAYING; }
@@ -791,19 +1028,25 @@ public class GamePanel extends JPanel {
                 float dx = x - px;
                 float dy = y - py;
                 
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    // Horizontal
+                // Detect Diagonal (if smaller component is at least 40% of larger component)
+                boolean isDiagonal = Math.min(Math.abs(dx), Math.abs(dy)) > 0.4 * Math.max(Math.abs(dx), Math.abs(dy));
+                
+                if (isDiagonal) {
                     player.attackDirX = dx > 0 ? 1 : -1;
-                    player.attackDirY = 0;
-                    player.facingLeft = dx < 0; // Visuals follow horizontal aim
-                } else {
-                    // Vertical
-                    player.attackDirX = 0;
                     player.attackDirY = dy > 0 ? 1 : -1;
-                    // Keep existing facingLeft for vertical attacks? Or flip?
-                    // Usually vertical attacks in 2D side-view flip based on horizontal offset anyway.
-                    // If dx is small but non-zero, use it. If 0, keep same.
-                    if (Math.abs(dx) > 1) player.facingLeft = dx < 0; 
+                    player.facingLeft = dx < 0;
+                } else {
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        // Horizontal
+                        player.attackDirX = dx > 0 ? 1 : -1;
+                        player.attackDirY = 0;
+                        player.facingLeft = dx < 0; 
+                    } else {
+                        // Vertical
+                        player.attackDirX = 0;
+                        player.attackDirY = dy > 0 ? 1 : -1;
+                        if (Math.abs(dx) > 1) player.facingLeft = dx < 0; 
+                    }
                 }
 
                 if (button == MouseEvent.BUTTON1) {
@@ -812,35 +1055,99 @@ public class GamePanel extends JPanel {
                     player.animFrame = 0;
                     player.animTick = 0;
                 } else if (button == MouseEvent.BUTTON3) {
-                    player.animState = Player.AnimState.ATTACK_2;
-                    player.actionLocked = true;
-                    player.animFrame = 0;
-                    player.animTick = 0;
+                    // Calculate direction towards mouse for ALL heroes on Right Click
+                    // Reuse dx/dy from outer scope
                     
-                    // Dash Logic: Check if space is free immediately in front
-                    int dashTargetX = player.x + player.attackDirX;
-                    int dashTargetY = player.y + player.attackDirY;
+                    // Normalize to find the closest grid direction (8-way)
+                    double angle = Math.atan2(dy, dx);
+                    int dirX = (int)Math.round(Math.cos(angle));
+                    int dirY = (int)Math.round(Math.sin(angle));
                     
-                    if (dashTargetX >= 0 && dashTargetX < map.cols && dashTargetY >= 0 && dashTargetY < map.rows) {
-                        Object t = map.getEntityAt(dashTargetX, dashTargetY);
-                        // Only dash if tile is walkable (null, Tent, Campfire)
-                        if (t == null || t instanceof WorldMap.Tent || t instanceof WorldMap.Campfire) {
-                            // Move player grid position
-                            player.x = dashTargetX;
-                            player.y = dashTargetY;
-                            map.updateExploration(dashTargetX, dashTargetY, 8);
-                            
-                            // Add visual burst
-                            // Since player.x changed, visualX is now "behind". 
-                            // updateVisuals will pull it.
-                            // We can add a bit of "overshoot" or just let the fast update handle it?
-                            // User wants a "dash/charge". 
-                            // Let's set a high visual velocity impulse.
-                            // We don't really use velocity in Player class, we use lerp.
-                            // But in GamePanel update we added `playerDashX/Y`.
-                            // Let's give it a kick.
-                            playerDashX = player.attackDirX * 15.0f; 
-                            playerDashY = player.attackDirY * 15.0f;
+                    // Update player facing immediately
+                    player.attackDirX = dirX;
+                    player.attackDirY = dirY;
+                    if (dirX != 0) player.facingLeft = (dirX < 0);
+
+                    // Archer Special: Right Click is just Dash (No Attack 2)
+                    if (selectedCharIndex == 2) {
+                        int tx = player.x + dirX;
+                        int ty = player.y + dirY;
+                        
+                        // Check dash validity (same as Q dash)
+                        if (tx >= 0 && tx < map.cols && ty >= 0 && ty < map.rows) {
+                            Object t = map.getEntityAt(tx, ty);
+                            if (t == null || t instanceof WorldMap.Tent || t instanceof WorldMap.Campfire) {
+                                player.x = tx; player.y = ty;
+                                map.updateExploration(tx, ty, 8);
+                                playerDashX = dirX * 12.0f;
+                                playerDashY = dirY * 12.0f;
+                                
+                                // Add small dust (Dust_01)
+                                if (Assets.PARTICLE_DUST_01 != null) {
+                                     float rot = 0; boolean flip = dirX > 0;
+                                     if (dirX == 0) rot = dirY > 0 ? 90 : -90;
+                                     else if (dirY != 0) rot = dirX > 0 ? (dirY > 0 ? 45 : -45) : (dirY > 0 ? -45 : 45);
+                                     
+                                     effects.add(new VisualEffect(player.visualX + 30, player.visualY + 30, Assets.PARTICLE_DUST_01, 8, flip, rot));
+                                }
+                                
+                                // Lock action to prevent auto-turn during slide
+                                player.actionLocked = true;
+                                player.animState = Player.AnimState.IDLE; // Use IDLE as dash duration timer
+                                player.animFrame = 0;
+                                player.animTick = 0;
+                            }
+                        }
+                    } else {
+                        // Standard Attack 2 + Dash for others
+                        player.animState = Player.AnimState.ATTACK_2;
+                        player.actionLocked = true;
+                        player.animFrame = 0;
+                        player.animTick = 0;
+                        
+                        int dashTargetX = player.x + dirX;
+                        int dashTargetY = player.y + dirY;
+                        
+                        if (dashTargetX >= 0 && dashTargetX < map.cols && dashTargetY >= 0 && dashTargetY < map.rows) {
+                            Object t = map.getEntityAt(dashTargetX, dashTargetY);
+                            // Only dash if tile is walkable (null, Tent, Campfire)
+                            if (t == null || t instanceof WorldMap.Tent || t instanceof WorldMap.Campfire) {
+                                // Move player grid position
+                                player.x = dashTargetX;
+                                player.y = dashTargetY;
+                                map.updateExploration(dashTargetX, dashTargetY, 8);
+                                
+                                // Add visual burst
+                                playerDashX = dirX * 15.0f; 
+                                playerDashY = dirY * 15.0f;
+                                
+                                // Spawn Dust Particle
+                                if (Assets.PARTICLE_DUST != null) {
+                                    float rot = 0;
+                                    boolean flip = false;
+                                    
+                                    // Calculate rotation based on direction
+                                    if (dirX > 0) { // Right
+                                        flip = true; 
+                                        if (dirY < 0) rot = -45;
+                                        else if (dirY > 0) rot = 45;
+                                    } else if (dirX < 0) { // Left
+                                        if (dirY < 0) rot = 45; 
+                                        else if (dirY > 0) rot = -45;
+                                    } else { // Vertical only
+                                        if (dirY < 0) rot = -90; // Up
+                                        else if (dirY > 0) rot = 90; // Down
+                                    }
+                                    
+                                    // Adjust position to be behind the player
+                                    float partX = player.visualX + 30; // Center
+                                    float partY = player.visualY + 30;
+                                    
+                                    // Dust_02 is 640x64 -> 10 frames
+                                    VisualEffect dust = new VisualEffect(partX, partY, Assets.PARTICLE_DUST, 10, flip, rot);
+                                    effects.add(dust);
+                                }
+                            }
                         }
                     }
                 }
@@ -864,6 +1171,13 @@ public class GamePanel extends JPanel {
                 }
             }
             if (uiRenderer.btnCharStart != null && uiRenderer.btnCharStart.contains(p)) pressedButton = uiRenderer.btnCharStart;
+            
+            if (uiRenderer.btnNameBox != null && uiRenderer.btnNameBox.contains(p)) {
+                isEditingHeroName = true;
+            } else {
+                isEditingHeroName = false;
+            }
+
             if (uiRenderer.ribbonDropdownRects != null) {
                 for(int i=0; i<uiRenderer.ribbonDropdownRects.length; i++) {
                      if (uiRenderer.ribbonDropdownRects[i] != null && uiRenderer.ribbonDropdownRects[i].contains(p)) {

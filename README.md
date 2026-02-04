@@ -17,8 +17,10 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 ### Combat & Mecanici Noi
 *   **Sistem de Guard:** Jucătorul poate acum bloca atacurile inamicilor folosind tasta **SPACE**. Blocarea corectă reduce sau anulează daunele primite.
 *   **Combat Manual:** Mecanica de luptă a fost schimbată; daunele nu mai sunt automate la coliziune. Jucătorul trebuie să dea click pe inamic pentru a-l lovi.
-*   **Heavy Attack:** S-a adăugat un atac puternic pe **CLICK DREAPTA** care oferă și o mică propulsie (dash) în direcția atacului.
+*   **Heavy Attack:** S-a adăugat un atac puternic pe **CLICK DREAPTA** care oferă și o mică propulsie (dash) în direcția atacului, acum cu animație de particule.
+*   **Dash Mechanic:** S-a implementat funcția de **Dash** pe tasta **Q** pentru toți eroii, cu animație dedicată.
 *   **Interacțiune pe Tasta E:** Utilizarea obiectelor din mână (mâncare, poțiuni) și plasarea clădirilor a fost mutată pe tasta **E**.
+*   **Animații Complete:** Toți cei 4 eroi (Knight, Lancer, Archer, Pawn) au acum animații corecte și funcționale pentru toate acțiunile.
 
 ### Refactoring Major & Save System
 *   **Sistem de Save/Load:** 3 sloturi de salvare cu nume personalizate, timestamp și screenshot-uri automate pentru fiecare sesiune.
@@ -31,6 +33,7 @@ Proiectul include și un **Map Editor** complet funcțional, care permite creare
 ### În Joc (Gameplay)
 *   **W / A / S / D** sau **Săgeți**: Mișcare caracter.
 *   **SPACE**: Guard (Blochează atacurile inamicilor).
+*   **Q**: Dash (Propulsie rapidă).
 *   **E**: Folosește item-ul selectat (Mănâncă / Bea / Construiește) sau Interacționează.
 *   **CLICK STÂNGA**: Atac Ușor (Lovituri rapide).
 *   **CLICK DREAPTA**: Atac Puternic / Dash (Daune mari).
@@ -69,4 +72,4 @@ Fiecare acțiune oferă XP. Creșterea în nivel îți deblochează atribute mai
 ---
 
 **Dezvoltat în Java AWT/Swing.**
-*Versiune: 0.2 (Graphics & Combat Update)*
+*Versiune: 0.2.1 (Animations & Dash Update)*

@@ -67,10 +67,34 @@ public class Assets {
     // --- UNITS ---
     public static BufferedImage WARRIOR_IDLE;
     public static BufferedImage WARRIOR_RUN;
+    
+    // Side (Right) - Default
     public static BufferedImage WARRIOR_ATTACK_1;
     public static BufferedImage WARRIOR_ATTACK_2;
     public static BufferedImage WARRIOR_GUARD;
     
+    // Down (Front)
+    public static BufferedImage WARRIOR_ATTACK_DOWN;
+    public static BufferedImage WARRIOR_GUARD_DOWN;
+    
+    // Up (Back)
+    public static BufferedImage WARRIOR_ATTACK_UP;
+    public static BufferedImage WARRIOR_GUARD_UP;
+    
+    // Down-Right (Front Side)
+    public static BufferedImage WARRIOR_ATTACK_DOWN_RIGHT;
+    public static BufferedImage WARRIOR_GUARD_DOWN_RIGHT;
+    
+    // Up-Right (Back Side)
+    public static BufferedImage WARRIOR_ATTACK_UP_RIGHT;
+    public static BufferedImage WARRIOR_GUARD_UP_RIGHT;
+    
+    // --- FRAME COUNTS ---
+    public static int FRAMES_IDLE = 6;
+    public static int FRAMES_RUN = 6;
+    public static int FRAMES_ATTACK = 6;
+    public static int FRAMES_BLOCK = 3; // Default
+
     // --- CURSORS ---
     public static BufferedImage CURSOR_DEFAULT;
     public static BufferedImage CURSOR_POINTER;
@@ -79,9 +103,38 @@ public class Assets {
     // --- FONTS ---
     public static Font PIXEL_FONT;
 
+    public static BufferedImage PARTICLE_DUST;
+    public static BufferedImage PARTICLE_DUST_01;
+    public static BufferedImage PROJECTILE_ARROW;
+    
+    public static BufferedImage ITEM_SWORD;
+    public static BufferedImage ITEM_AXE;
+    public static BufferedImage ITEM_PICKAXE;
+    
+    // --- PAWN SPECIAL ANIMATIONS ---
+    public static BufferedImage PAWN_IDLE_EMPTY, PAWN_IDLE_SWORD, PAWN_IDLE_AXE, PAWN_IDLE_PICK, PAWN_IDLE_WOOD;
+    public static BufferedImage PAWN_RUN_EMPTY, PAWN_RUN_SWORD, PAWN_RUN_AXE, PAWN_RUN_PICK, PAWN_RUN_WOOD;
+    public static BufferedImage PAWN_INT_SWORD, PAWN_INT_AXE, PAWN_INT_PICK;
+    
+    public static int SELECTED_CHAR_INDEX = 0;
+
     public static void loadAssets() {
         try {
             UI_MENU_BG = ImageIO.read(new File("Tiny Swords (Free Pack)/UI Elements/UI Elements/Wood Table/WoodTable.png"));
+            
+            ITEM_SWORD = ImageIO.read(new File("Tiny Swords (Free Pack)/Terrain/Resources/Tools/Tool_03.png"));
+            ITEM_AXE = ImageIO.read(new File("Tiny Swords (Free Pack)/Terrain/Resources/Tools/Tool_02.png"));
+            ITEM_PICKAXE = ImageIO.read(new File("Tiny Swords (Free Pack)/Terrain/Resources/Tools/Tool_04.png"));
+            
+            File fArrow = new File("Tiny Swords (Free Pack)/Units/Blue Units/Archer/Arrow.png");
+            if(fArrow.exists()) PROJECTILE_ARROW = ImageIO.read(fArrow);
+            
+            File fDust = new File("Tiny Swords (Free Pack)/Particle FX/Dust_02.png");
+            if(fDust.exists()) PARTICLE_DUST = ImageIO.read(fDust);
+            
+            File fDust1 = new File("Tiny Swords (Free Pack)/Particle FX/Dust_01.png");
+            if(fDust1.exists()) PARTICLE_DUST_01 = ImageIO.read(fDust1);
+            
             UI_BUTTON = ImageIO.read(new File("Tiny Swords (Update 010)/UI/Buttons/Button_Blue_3Slides.png"));
             UI_BUTTON_HOVER = ImageIO.read(new File("Tiny Swords (Update 010)/UI/Buttons/Button_Hover_3Slides.png"));
             UI_RIBBON = ImageIO.read(new File("Tiny Swords (Update 010)/UI/Ribbons/Ribbon_Red_3Slides.png"));
@@ -270,6 +323,7 @@ public class Assets {
     public static final Color WITCH_SKIN = new Color(200, 200, 220);
 
     public static void updatePlayerSprites(int charIndex, int colorIndex) {
+        SELECTED_CHAR_INDEX = charIndex;
         String[] colors = {"Blue", "Red", "Yellow", "Purple", "Black"};
         String[] types = {"Warrior", "Lancer", "Archer", "Pawn"};
         
@@ -283,34 +337,126 @@ public class Assets {
         
         try {
             File fIdle = new File(path + type + "_Idle.png");
-            if (fIdle.exists()) WARRIOR_IDLE = ImageIO.read(fIdle);
+            if (fIdle.exists()) {
+                WARRIOR_IDLE = ImageIO.read(fIdle);
+                if (WARRIOR_IDLE != null && WARRIOR_IDLE.getHeight() > 0) FRAMES_IDLE = WARRIOR_IDLE.getWidth() / WARRIOR_IDLE.getHeight();
+            }
             
             File fRun = new File(path + type + "_Run.png");
-            if (fRun.exists()) WARRIOR_RUN = ImageIO.read(fRun);
+            if (fRun.exists()) {
+                WARRIOR_RUN = ImageIO.read(fRun);
+                if (WARRIOR_RUN != null && WARRIOR_RUN.getHeight() > 0) FRAMES_RUN = WARRIOR_RUN.getWidth() / WARRIOR_RUN.getHeight();
+            }
             
-            if (type.equals("Warrior")) {
-                File fA1 = new File(path + type + "_Attack1.png"); if(fA1.exists()) WARRIOR_ATTACK_1 = ImageIO.read(fA1);
+            if (type.equals("Pawn")) {
+                // Load Pawn Specifics dynamically based on selected color
+                PAWN_IDLE_EMPTY = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Idle.png"));
+                PAWN_IDLE_SWORD = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Idle Knife.png"));
+                PAWN_IDLE_AXE = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Idle Axe.png"));
+                PAWN_IDLE_PICK = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Idle Pickaxe.png"));
+                PAWN_IDLE_WOOD = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Idle Wood.png"));
+                
+                PAWN_RUN_EMPTY = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Run.png"));
+                PAWN_RUN_SWORD = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Run Knife.png"));
+                PAWN_RUN_AXE = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Run Axe.png"));
+                PAWN_RUN_PICK = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Run Pickaxe.png"));
+                PAWN_RUN_WOOD = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Run Wood.png"));
+                
+                PAWN_INT_SWORD = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Interact Knife.png"));
+                PAWN_INT_AXE = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Interact Axe.png"));
+                PAWN_INT_PICK = ImageIO.read(new File("Tiny Swords (Free Pack)/Units/" + color + " Units/Pawn/Pawn_Interact Pickaxe.png"));
+                
+                // Set Defaults
+                WARRIOR_IDLE = PAWN_IDLE_EMPTY;
+                WARRIOR_RUN = PAWN_RUN_EMPTY;
+                WARRIOR_ATTACK_1 = PAWN_INT_SWORD; // Default attack
+                WARRIOR_ATTACK_2 = PAWN_INT_AXE; 
+                
+                if (WARRIOR_IDLE != null) FRAMES_IDLE = WARRIOR_IDLE.getWidth() / WARRIOR_IDLE.getHeight();
+                if (WARRIOR_RUN != null) FRAMES_RUN = WARRIOR_RUN.getWidth() / WARRIOR_RUN.getHeight();
+                if (WARRIOR_ATTACK_1 != null) FRAMES_ATTACK = WARRIOR_ATTACK_1.getWidth() / WARRIOR_ATTACK_1.getHeight();
+                
+                WARRIOR_GUARD = WARRIOR_IDLE;
+                FRAMES_BLOCK = FRAMES_IDLE;
+                
+                WARRIOR_ATTACK_DOWN = WARRIOR_ATTACK_1; WARRIOR_GUARD_DOWN = WARRIOR_GUARD;
+                WARRIOR_ATTACK_UP = WARRIOR_ATTACK_1; WARRIOR_GUARD_UP = WARRIOR_GUARD;
+                WARRIOR_ATTACK_DOWN_RIGHT = WARRIOR_ATTACK_1; WARRIOR_GUARD_DOWN_RIGHT = WARRIOR_GUARD;
+                WARRIOR_ATTACK_UP_RIGHT = WARRIOR_ATTACK_1; WARRIOR_GUARD_UP_RIGHT = WARRIOR_GUARD;
+                
+            } else if (type.equals("Warrior")) {
+                File fA1 = new File(path + type + "_Attack1.png"); 
+                if(fA1.exists()) {
+                    WARRIOR_ATTACK_1 = ImageIO.read(fA1);
+                    if (WARRIOR_ATTACK_1 != null && WARRIOR_ATTACK_1.getHeight() > 0) FRAMES_ATTACK = WARRIOR_ATTACK_1.getWidth() / WARRIOR_ATTACK_1.getHeight();
+                }
                 File fA2 = new File(path + type + "_Attack2.png"); if(fA2.exists()) WARRIOR_ATTACK_2 = ImageIO.read(fA2);
-                File fG = new File(path + type + "_Guard.png"); if(fG.exists()) WARRIOR_GUARD = ImageIO.read(fG);
+                File fG = new File(path + type + "_Guard.png"); 
+                if(fG.exists()) {
+                    WARRIOR_GUARD = ImageIO.read(fG);
+                    if (WARRIOR_GUARD != null && WARRIOR_GUARD.getHeight() > 0) FRAMES_BLOCK = WARRIOR_GUARD.getWidth() / WARRIOR_GUARD.getHeight();
+                }
+                
+                // Fallback for warrior (no directionals in free pack usually, or logic simpler)
+                WARRIOR_ATTACK_DOWN = WARRIOR_ATTACK_1; WARRIOR_GUARD_DOWN = WARRIOR_GUARD;
+                WARRIOR_ATTACK_UP = WARRIOR_ATTACK_1; WARRIOR_GUARD_UP = WARRIOR_GUARD;
+                WARRIOR_ATTACK_DOWN_RIGHT = WARRIOR_ATTACK_1; WARRIOR_GUARD_DOWN_RIGHT = WARRIOR_GUARD;
+                WARRIOR_ATTACK_UP_RIGHT = WARRIOR_ATTACK_1; WARRIOR_GUARD_UP_RIGHT = WARRIOR_GUARD;
+                
             } else if (type.equals("Archer")) {
                 File fShoot = new File(path + type + "_Shoot.png");
                 if(fShoot.exists()) {
                     WARRIOR_ATTACK_1 = ImageIO.read(fShoot);
+                    if (WARRIOR_ATTACK_1 != null && WARRIOR_ATTACK_1.getHeight() > 0) FRAMES_ATTACK = WARRIOR_ATTACK_1.getWidth() / WARRIOR_ATTACK_1.getHeight();
                     WARRIOR_ATTACK_2 = WARRIOR_ATTACK_1;
                 }
                 WARRIOR_GUARD = WARRIOR_IDLE;
+                FRAMES_BLOCK = FRAMES_IDLE;
+                
+                // Fallback for Archer
+                WARRIOR_ATTACK_DOWN = WARRIOR_ATTACK_1; WARRIOR_GUARD_DOWN = WARRIOR_GUARD;
+                WARRIOR_ATTACK_UP = WARRIOR_ATTACK_1; WARRIOR_GUARD_UP = WARRIOR_GUARD;
+                WARRIOR_ATTACK_DOWN_RIGHT = WARRIOR_ATTACK_1; WARRIOR_GUARD_DOWN_RIGHT = WARRIOR_GUARD;
+                WARRIOR_ATTACK_UP_RIGHT = WARRIOR_ATTACK_1; WARRIOR_GUARD_UP_RIGHT = WARRIOR_GUARD;
+                
             } else if (type.equals("Lancer")) {
+                // Right
                 File fAtt = new File(path + type + "_Right_Attack.png");
                 if(fAtt.exists()) {
                     WARRIOR_ATTACK_1 = ImageIO.read(fAtt);
+                    if (WARRIOR_ATTACK_1 != null && WARRIOR_ATTACK_1.getHeight() > 0) FRAMES_ATTACK = WARRIOR_ATTACK_1.getWidth() / WARRIOR_ATTACK_1.getHeight();
                     WARRIOR_ATTACK_2 = WARRIOR_ATTACK_1;
                 }
                 File fDef = new File(path + type + "_Right_Defence.png");
-                if(fDef.exists()) WARRIOR_GUARD = ImageIO.read(fDef);
-            } else if (type.equals("Pawn")) {
-                File fA1 = new File(path + type + "_Interact Axe.png"); if(fA1.exists()) WARRIOR_ATTACK_1 = ImageIO.read(fA1);
-                File fA2 = new File(path + type + "_Interact Pickaxe.png"); if(fA2.exists()) WARRIOR_ATTACK_2 = ImageIO.read(fA2);
-                WARRIOR_GUARD = WARRIOR_IDLE;
+                if(fDef.exists()) {
+                    WARRIOR_GUARD = ImageIO.read(fDef);
+                    if (WARRIOR_GUARD != null && WARRIOR_GUARD.getHeight() > 0) FRAMES_BLOCK = WARRIOR_GUARD.getWidth() / WARRIOR_GUARD.getHeight();
+                }
+                
+                // Down
+                File fAttD = new File(path + type + "_Down_Attack.png");
+                if(fAttD.exists()) WARRIOR_ATTACK_DOWN = ImageIO.read(fAttD); else WARRIOR_ATTACK_DOWN = WARRIOR_ATTACK_1;
+                File fDefD = new File(path + type + "_Down_Defence.png");
+                if(fDefD.exists()) WARRIOR_GUARD_DOWN = ImageIO.read(fDefD); else WARRIOR_GUARD_DOWN = WARRIOR_GUARD;
+                
+                // Up
+                File fAttU = new File(path + type + "_Up_Attack.png");
+                if(fAttU.exists()) WARRIOR_ATTACK_UP = ImageIO.read(fAttU); else WARRIOR_ATTACK_UP = WARRIOR_ATTACK_1;
+                File fDefU = new File(path + type + "_Up_Defence.png");
+                if(fDefU.exists()) WARRIOR_GUARD_UP = ImageIO.read(fDefU); else WARRIOR_GUARD_UP = WARRIOR_GUARD;
+                
+                // Down Right
+                File fAttDR = new File(path + type + "_DownRight_Attack.png");
+                if(fAttDR.exists()) WARRIOR_ATTACK_DOWN_RIGHT = ImageIO.read(fAttDR); else WARRIOR_ATTACK_DOWN_RIGHT = WARRIOR_ATTACK_1;
+                File fDefDR = new File(path + type + "_DownRight_Defence.png");
+                if(fDefDR.exists()) WARRIOR_GUARD_DOWN_RIGHT = ImageIO.read(fDefDR); else WARRIOR_GUARD_DOWN_RIGHT = WARRIOR_GUARD;
+                
+                // Up Right
+                File fAttUR = new File(path + type + "_UpRight_Attack.png");
+                if(fAttUR.exists()) WARRIOR_ATTACK_UP_RIGHT = ImageIO.read(fAttUR); else WARRIOR_ATTACK_UP_RIGHT = WARRIOR_ATTACK_1;
+                File fDefUR = new File(path + type + "_UpRight_Defence.png");
+                if(fDefUR.exists()) WARRIOR_GUARD_UP_RIGHT = ImageIO.read(fDefUR); else WARRIOR_GUARD_UP_RIGHT = WARRIOR_GUARD;
+                
             }
         } catch (IOException e) {
             System.err.println("Error updating sprites for " + color + " " + type);

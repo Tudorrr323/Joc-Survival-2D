@@ -9,6 +9,8 @@
 package ui;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 
 public class VisualEffect {
     public float x, y;
@@ -19,6 +21,15 @@ public class VisualEffect {
     public float size;
 
     public boolean isNotification = false;
+    
+    // Animation Support
+    public BufferedImage spriteSheet;
+    public int frameCount;
+    public int currentFrame;
+    public int frameDelay; // Ticks per frame
+    public int frameTimer;
+    public boolean flipX = false;
+    public float rotation = 0;
 
     public VisualEffect(float x, float y, String text, Color color, float size) {
         this.x = x;
@@ -28,6 +39,19 @@ public class VisualEffect {
         this.size = size;
         this.life = 60; // 1 secunda (la 60fps)
         this.velY = -1.0f; // Se ridica in sus
+    }
+    
+    // Constructor for Animated Particle
+    public VisualEffect(float x, float y, BufferedImage sheet, int frames, boolean flipX, float rotation) {
+        this.x = x;
+        this.y = y;
+        this.spriteSheet = sheet;
+        this.frameCount = frames;
+        this.life = frames * 4; // 4 ticks per frame default
+        this.frameDelay = 4;
+        this.flipX = flipX;
+        this.rotation = rotation;
+        this.size = 60; // Default size
     }
     
     // Constructor for Notification (Bottom-Right, Static)
@@ -43,12 +67,41 @@ public class VisualEffect {
     }
 
     public boolean update() {
+        if (spriteSheet != null) {
+            frameTimer++;
+            if (frameTimer >= frameDelay) {
+                frameTimer = 0;
+                currentFrame++;
+            }
+            if (currentFrame >= frameCount) return false; // Die after animation
+            return true;
+        }
+        
         y += velY;
         life--;
         return life > 0;
     }
 
     public void draw(Graphics2D g2) {
+        if (spriteSheet != null) {
+            // Draw animated sprite
+            int frameW = spriteSheet.getWidth() / frameCount;
+            int frameH = spriteSheet.getHeight();
+            int sx1 = currentFrame * frameW;
+            int sx2 = sx1 + frameW;
+            
+            AffineTransform old = g2.getTransform();
+            g2.translate(x, y);
+            g2.rotate(Math.toRadians(rotation));
+            if (flipX) g2.scale(-1, 1);
+            
+            // Center the sprite
+            g2.drawImage(spriteSheet, -30, -30, 30, 30, sx1, 0, sx2, frameH, null);
+            
+            g2.setTransform(old);
+            return;
+        }
+        
         int alpha = 255;
 
         if (isNotification) {
